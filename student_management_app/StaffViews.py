@@ -122,7 +122,6 @@ def view_student_result(request, student_id, subject_id):
     
 from django.shortcuts import render
 from django.utils import timezone
-import pytz
 from student_management_app.models import Subjects, SessionYearModel
 
 def staff_take_attendance(request):
