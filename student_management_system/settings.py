@@ -43,8 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'student_management_app',
-    'django.contrib.sites',  # Required for captcha
-    'captcha',
+    'django.contrib.sites', 
 ]
 
 MIDDLEWARE = [
