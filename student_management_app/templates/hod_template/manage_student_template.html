@@ -1,0 +1,541 @@
+{% extends 'hod_template/base_template.html' %}
+{% block page_title %}
+Manage Students
+{% endblock page_title %}
+{% load static %}
+{% block main_content %}
+<!-- Main content -->
+<section class="content">
+  <div class="container-fluid">
+    <!-- Message Display -->
+    <div class="row">
+      <div class="col-12">
+        {% if messages %}
+          {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+              {{ message }}
+              <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+          {% endfor %}
+        {% endif %}
+      </div>
+    </div>
+    <!-- End Message Display -->
+
+    <!-- Search/Filters Information Banner -->
+    {% if selected_course or selected_session or name_query %}
+    <div class="row mb-3">
+      <div class="col-12">
+        <div class="callout callout-info bg-light">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h5 class="mb-1"><i class="fas fa-filter mr-2"></i>Current Filters:</h5>
+              <div class="d-flex flex-wrap">
+                {% if name_query %}
+                <span class="badge badge-primary mr-2 mb-1">
+                  <i class="fas fa-user mr-1"></i> Name: "{{ name_query }}"
+                </span>
+                {% endif %}
+                {% if selected_course %}
+                <span class="badge badge-success mr-2 mb-1">
+                  <i class="fas fa-graduation-cap mr-1"></i> Course: {{ selected_course_name }}
+                </span>
+                {% endif %}
+                {% if selected_session %}
+                <span class="badge badge-warning mr-2 mb-1">
+                  <i class="fas fa-calendar-alt mr-1"></i> Session: {{ selected_session_years }}
+                </span>
+                {% endif %}
+              </div>
+            </div>
+            <div>
+              <span class="badge badge-pill badge-secondary">
+                {{ students.paginator.count }} student{{ students.paginator.count|pluralize:" found" }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="row">
+      <div class="col-12">
+        <div class="card card-primary card-outline">
+          
+          <div class="card-header bg-gradient-navy">
+            <h3 class="card-title text-white">
+              <i class="fas fa-user-graduate mr-2"></i>
+              Student Details
+            </h3>
+            <div class="card-tools">
+              <a href="{% url 'add_student' %}" class="btn btn-sm btn-success mr-2">
+                <i class="fas fa-plus"></i> Add Student
+              </a>
+              <button id="printBtn" class="btn btn-default btn-sm mr-2">
+                <i class="fas fa-print"></i> Print
+              </button>
+            </div>
+          </div>
+          <!-- /.card-header -->
+          <div class="card-body p-0">
+            <!-- Filter Options (placed before the table) -->
+            <div class="p-3 border-bottom">
+              <form method="GET" action="" class="form-inline">
+                <div class="form-group mr-2 mb-2">
+                  <select name="course" id="course_filter" class="form-control form-control-sm">
+                    <option value="">All Courses</option>
+                    {% for course in courses %}
+                      <option value="{{ course.id }}" {% if selected_course == course.id|stringformat:"s" %}selected{% endif %}>{{ course.course_name }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                
+                <div class="form-group mr-2 mb-2">
+                  <select name="session" id="session_filter" class="form-control form-control-sm">
+                    <option value="">All Sessions</option>
+                    {% for session in sessions %}
+                      <option value="{{ session.id }}" {% if selected_session == session.id|stringformat:"s" %}selected{% endif %}>
+                        {{ session.session_start_year|date:"Y" }} - {{ session.session_end_year|date:"Y" }}
+                      </option>
+                    {% endfor %}
+                  </select>
+                </div>
+                
+                <div class="form-group mr-2 mb-2">
+                  <button type="submit" class="btn btn-primary btn-sm">
+                    <i class="fas fa-filter"></i> Filter
+                  </button>
+                  <a href="{% url 'manage_student' %}" class="btn btn-default btn-sm ml-1">
+                    <i class="fas fa-sync-alt"></i>
+                  </a>
+                </div>
+                
+                <div class="form-group ml-auto mb-2">
+                  <div class="input-group input-group-sm">
+                    <input type="text" name="name_search" class="form-control" placeholder="Search by name..." value="{{ name_query|default:'' }}">
+                    <div class="input-group-append">
+                      <button type="submit" class="btn btn-info">
+                        <i class="fas fa-search"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </form>
+            </div>
+            
+            <div class="table-responsive">
+              <table class="table table-hover table-striped" id="studentTable">
+                <thead class="bg-lightblue">
+                  <tr>
+                    <th>ID</th>
+                    <th>Profile</th>
+                    <th>Name</th>
+                    <th>Username</th>
+                    <th>Gender</th>
+                    <th>Roll Number</th>
+                    <th>Contact</th>
+                    <th>Address</th>
+                    <th>Academic</th>
+                    <th>Status</th>
+                    <th class="text-center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for student in students %}
+                  <tr class="{% cycle 'bg-white' 'bg-gray-50' %}">
+                    <td class="align-middle font-weight-bold text-primary">#{{ student.admin.id }}</td>
+                    <td class="align-middle">
+                      <div class="d-flex align-items-center">
+                        <div class="avatar-circle-sm mr-2">
+                          {% if student.profile_pic %}
+                            <img src="{{ student.profile_pic }}" class="img-circle" alt="Profile">
+                          {% else %}
+                            <img src="{% static 'dist/img/user2-160x160.jpg' %}" class="img-circle" alt="Default Profile">
+                          {% endif %}
+                        </div>
+                      </div>
+                    </td>
+                    <td class="align-middle">
+                      <div class="d-flex flex-column">
+                        <span class="font-weight-bold">{{ student.admin.first_name }} {{ student.admin.last_name }}</span>
+                        <small class="text-muted">{{ student.admin.email }}</small>
+                      </div>
+                    </td>
+                    <td class="align-middle">
+                      <span class="badge badge-info">{{ student.admin.username }}</span>
+                    </td>
+                    <td class="align-middle">{{ student.gender }}</td>
+                    <td class="align-middle">{{ student.roll_number }}</td>
+                    <td class="align-middle">
+                      <i class="fas fa-phone mr-1 text-muted"></i> {{ student.phone_number|default:"-" }}
+                    </td>
+                    <td class="align-middle">
+                      {{ student.address|default:"-" }}
+                    </td>
+                    <td class="align-middle">
+                      <div class="d-flex flex-column">
+                        <span class="text-primary">{{ student.course_id.course_name }}</span>
+                        <small class="text-muted">
+                          Session: {{ student.session_year_id.session_start_year|date:"F j, Y" }} to {{ student.session_year_id.session_end_year|date:"F j, Y" }}
+                        </small>
+                      </div>
+                    </td>
+                    <td class="align-middle" style="min-width: 150px;">
+                      <span class="badge {% if student.admin.is_active %}badge-success{% else %}badge-danger{% endif %}">
+                        {% if student.admin.is_active %}Active{% else %}Inactive{% endif %}
+                      </span>
+                      <div class="text-muted small">
+                        <div><i class="fas fa-calendar-alt mr-1"></i> Joined: {{ student.admin.date_joined|date:"Y-m-d" }}</div>
+                        <div style="color: #2a5298;"><i class="fas fa-sign-in-alt mr-1"></i> Last login: {% if student.admin.last_login %}{{ student.admin.last_login|date:"Y-m-d H:i" }}{% else %}Never{% endif %}</div>
+                      </div>
+                    </td>
+                    <td class="align-middle text-center">
+                      <div class="btn-group" role="group">
+                        <a href="{% url 'edit_student' student_id=student.admin.id %}" class="btn btn-sm btn-outline-primary" title="Edit" data-toggle="tooltip">
+                          <i class="fas fa-edit"></i>
+                        </a>
+                        <button class="btn btn-sm btn-outline-danger" data-toggle="modal" data-target="#deleteModal{{ student.admin.id }}" title="Delete" data-toggle="tooltip">
+                          <i class="fas fa-trash"></i>
+                        </button>
+                        <a href="{% url 'student_profile_view' student_id=student.admin.id %}" class="btn btn-sm btn-outline-info" title="View Profile" data-toggle="tooltip">
+                          <i class="fas fa-eye"></i>
+                        </a>
+                      </div>
+                    </td>
+                  </tr>
+
+                  <!-- Delete Modal for each student -->
+                  <div class="modal fade" id="deleteModal{{ student.admin.id }}" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered" role="document">
+                      <div class="modal-content">
+                        <div class="modal-header bg-danger text-white">
+                          <h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
+                          <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                          </button>
+                        </div>
+                        <div class="modal-body">
+                          <div class="text-center mb-4">
+                            {% if student.profile_pic %}
+                              <img src="{{ student.profile_pic }}" class="img-circle elevation-2" width="100" height="100" alt="Profile">
+                            {% else %}
+                              <img src="{% static 'dist/img/user2-160x160.jpg' %}" class="img-circle elevation-2" width="100" height="100" alt="Default Profile">
+                            {% endif %}
+                            <h5 class="mt-3">{{ student.admin.first_name }} {{ student.admin.last_name }}</h5>
+                            <p class="text-muted">{{ student.admin.email }}</p>
+                            <div class="text-left mt-3">
+                              <p><strong>Address:</strong> {{ student.address|default:"Not specified" }}</p>
+                              <p><strong>Session:</strong> {{ student.session_year_id.session_start_year|date:"F j, Y" }} to {{ student.session_year_id.session_end_year|date:"F j, Y" }}</p>
+                            </div>
+                          </div>
+                          <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>
+                            <strong>Warning:</strong> This action cannot be undone. All associated data will be permanently deleted.
+                          </div>
+                        </div>
+                        <div class="modal-footer">
+                          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                          <form method="POST" action="{% url 'delete_student' student_id=student.admin.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">
+                              <i class="fas fa-trash mr-1"></i> Delete Permanently
+                            </button>
+                          </form>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <!-- /.card-body -->
+          <div class="card-footer bg-white">
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="text-muted">
+                Showing <strong>{{ students.start_index }}</strong> to <strong>{{ students.end_index }}</strong> of <strong>{{ students.paginator.count }}</strong> students
+              </div>
+              
+              <div>
+                {% if students.has_other_pages %}
+                  <nav aria-label="Page navigation">
+                    <ul class="pagination pagination-sm m-0">
+                      {% if students.has_previous %}
+                        <li class="page-item">
+                          <a class="page-link" href="?page=1" aria-label="First">
+                            <span aria-hidden="true">&laquo;&laquo;</span>
+                          </a>
+                        </li>
+                        <li class="page-item">
+                          <a class="page-link" href="?page={{ students.previous_page_number }}" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                          </a>
+                        </li>
+                      {% endif %}
+                      
+                      {% for i in students.paginator.page_range %}
+                        {% if students.number == i %}
+                          <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+                        {% elif i > students.number|add:'-3' and i < students.number|add:'3' %}
+                          <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+                        {% endif %}
+                      {% endfor %}
+                      
+                      {% if students.has_next %}
+                        <li class="page-item">
+                          <a class="page-link" href="?page={{ students.next_page_number }}" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                          </a>
+                        </li>
+                        <li class="page-item">
+                          <a class="page-link" href="?page={{ students.paginator.num_pages }}" aria-label="Last">
+                            <span aria-hidden="true">&raquo;&raquo;</span>
+                          </a>
+                        </li>
+                      {% endif %}
+                    </ul>
+                  </nav>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Print Styles -->
+<style type="text/css" media="print">
+  @page {
+    size: A4;
+    margin: 1cm;
+  }
+  body * {
+    visibility: hidden;
+  }
+  #printSection, #printSection * {
+    visibility: visible;
+  }
+  #printSection {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 20px;
+  }
+  .print-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+  }
+  .print-table th, .print-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+  }
+  .print-table th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+  }
+  .print-header {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  .print-footer {
+    text-align: right;
+    margin-top: 20px;
+    font-size: 12px;
+    color: #666;
+  }
+
+
+  .bg-gradient-navy {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%) !important;
+  }
+  
+  .avatar-circle-sm {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid #dee2e6;
+  }
+  
+  .avatar-circle-sm img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .table-hover tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.05) !important;
+  }
+  
+  .table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(0, 0, 0, 0.02);
+  }
+  
+  .btn-group .btn {
+    margin-right: 5px;
+    border-radius: 4px !important;
+  }
+  
+  .btn-group .btn:last-child {
+    margin-right: 0;
+  }
+  
+  .modal-content {
+    border: none;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+  }
+  
+  .modal-header {
+    border-bottom: none;
+  }
+  
+  /* Search filter banner styles */
+  .callout.callout-info {
+    border-left: 5px solid #17a2b8;
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 4px;
+  }
+  
+  .callout h5 {
+    color: #17a2b8;
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Get the print button
+  const printBtn = document.getElementById('printBtn');
+  
+  // Add click event listener
+  printBtn.addEventListener('click', function() {
+    // Create a hidden div for printing
+    const printDiv = document.createElement('div');
+    printDiv.id = 'printSection';
+    printDiv.style.display = 'none';
+    document.body.appendChild(printDiv);
+    
+    // Build the print content
+    let printContent = `
+      <style>
+        @page { size: A4; margin: 1cm; }
+        body { font-family: Arial; }
+        .print-header { 
+          text-align: center; 
+          margin-bottom: 5px;
+        }
+        .print-header h1 { 
+          color: #000;
+          margin-bottom: 5px;
+          font-size: 18px;
+        }
+        .print-subheader {
+          text-align: center;
+          margin-bottom: 15px;
+          font-size: 16px;
+        }
+        .student-count {
+          text-align: center;
+          margin-bottom: 15px;
+          font-size: 14px;
+        }
+        .student-table { 
+          width: 100%; 
+          border-collapse: collapse; 
+          margin-top: 10px;
+          font-size: 12px;
+        }
+        .student-table th, .student-table td { 
+          border: 1px solid #ddd; 
+          padding: 8px; 
+          text-align: left; 
+        }
+        .student-table th { 
+          background-color: #f2f2f2;
+          font-weight: bold;
+        }
+        .print-footer { 
+          margin-top: 20px; 
+          text-align: right; 
+          font-size: 11px; 
+          color: #666;
+        }
+      </style>
+      <div class="print-header">
+        <h1>Student Records</h1>
+      </div>
+      <div class="student-count">
+        Total Students: {{ students.paginator.count }}
+      </div>
+      <table class="student-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Gender</th>
+            <th>Roll No</th>
+            <th>Contact</th>
+            <th>Course</th>
+            <th>Session</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+    // Add student data
+    {% for student in students %}
+    printContent += `
+      <tr>
+        <td>#{{ student.admin.id }}</td>
+        <td>{{ student.admin.first_name }} {{ student.admin.last_name }}</td>
+        <td>{{ student.admin.username }}</td>
+        <td>{{ student.admin.email }}</td>
+        <td>{{ student.gender }}</td>
+        <td>{{ student.roll_number }}</td>
+        <td>{% if student.phone_number %}{{ student.phone_number }}{% else %}-{% endif %}</td>
+        <td>{{ student.course_id.course_name }}</td>
+        <td>{{ student.session_year_id.session_start_year|date:"Y" }} - {{ student.session_year_id.session_end_year|date:"Y" }}</td>
+        <td>{% if student.admin.is_active %}Active{% else %}Inactive{% endif %}</td>
+      </tr>
+    `;
+    {% endfor %}
+
+    printContent += `
+        </tbody>
+      </table>
+      <div class="print-footer">
+        Printed on ${new Date().toLocaleString()}
+      </div>
+    `;
+
+    // Set the print content
+    printDiv.innerHTML = printContent;
+
+    // Show only the print section
+    const originalContents = document.body.innerHTML;
+    const printSection = document.getElementById('printSection').innerHTML;
+    
+    document.body.innerHTML = printSection;
+    window.print();
+    
+    // Restore original content
+    document.body.innerHTML = originalContents;
+  });
+});
+</script>
+<!-- /.content -->
+{% endblock main_content %}

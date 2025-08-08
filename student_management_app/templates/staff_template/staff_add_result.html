@@ -1,0 +1,109 @@
+{% extends 'staff_template/base_template.html' %}
+{% block page_title %}
+Add Results
+{% endblock page_title %}
+{% block main_content %}
+    <!-- Main content -->
+    <section class="content">
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-md-12">
+            <!-- general form elements -->
+            <form action="{% url 'save_student_result' %}" method="post">
+              {% csrf_token %}
+              <div class="card card-primary">
+                <div class="card-header">
+                  <h3 class="card-title">Add Results</h3>
+                </div>
+                <div class="card-body">
+                  <div class="form-group">
+                    <label>Subject</label>
+                    <select class="form-control" name="subject" id="subject">
+                      {% for subject in subjects %}
+                        <option value="{{ subject.id }}" 
+                          data-internal="{{ subject.internal_full_marks }}"
+                          data-exam="{{ subject.exam_full_marks }}">
+                          {{ subject.subject_name }} (Assignment: {{ subject.internal_full_marks }}, Exam: {{ subject.exam_full_marks }})
+                        </option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label>Session Year</label>
+                    <select class="form-control" name="session_year" id="session_year">
+                      {% for session_year in session_years %}
+                        <option value="{{ session_year.id }}">{{ session_year.session_start_year }} TO {{ session_year.session_end_year }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                  {% if messages %}
+                    {% for message in messages %}
+                      <div class="alert alert-{{ message.tags }}" style="margin-top:10px">{{ message }}</div>
+                    {% endfor %}
+                  {% endif %}
+                </div>
+                <div class="card-footer">
+                  <button type="button" class="btn btn-primary btn-block" id="fetch_student">Fetch Student</button>
+                </div>
+                <div id="student_data" class="card-footer"></div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+{% endblock main_content %}
+
+{% block custom_js %}
+<script>
+$(document).ready(function(){
+    $("#fetch_student").click(function(){
+        var subject = $("#subject").val();
+        var session_year = $("#session_year").val();
+        var subject_data = $("#subject option:selected");
+        var internal_max = subject_data.data('internal');
+        var exam_max = subject_data.data('exam');
+
+        $.ajax({
+            url: "{% url 'get_students' %}",
+            type: 'POST',
+            data: {subject: subject, session_year: session_year},
+        })
+        .done(function(response){
+            var json_data = JSON.parse(response);
+            var div_data = `
+                <div class="form-group">
+                    <label>Student List</label>
+                    <select class="form-control" name="student_list">
+                        ${json_data.map(student => 
+                            `<option value="${student.id}">ID: ${student.id} - ${student.name}</option>`
+                        ).join('')}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label>Assignment Marks (Max: ${internal_max})</label>
+                            <input type="number" name="assignment_marks" class="form-control" 
+                                   placeholder="Enter marks" min="0" max="${internal_max}" step="0.01" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label>Exam Marks (Max: ${exam_max})</label>
+                            <input type="number" name="exam_marks" class="form-control" 
+                                   placeholder="Enter marks" min="0" max="${exam_max}" step="0.01" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="btn btn-success btn-block">Save Results</button>
+                </div>
+            `;
+            $("#student_data").html(div_data);
+        })
+        .fail(function(){
+            alert("Error fetching students");
+        });
+    });
+});
+</script>
+{% endblock custom_js %}

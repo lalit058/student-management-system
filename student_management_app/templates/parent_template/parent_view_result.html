@@ -1,0 +1,189 @@
+{% extends 'parent_template/base_template.html' %}
+{% load static %}
+{% block page_title %}View Student Results{% endblock %}
+{% block main_content %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <!-- Student Info -->
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">Student Information</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3 text-center">
+                                {% if student.profile_pic %}
+                                <img src="{{ student.profile_pic }}" class="img-circle elevation-2" alt="Student Image"
+                                    style="width: 120px; height: 120px;">
+                                {% else %}
+                                <img src="{% static 'dist/img/default-user.png' %}" class="img-circle elevation-2"
+                                    alt="Student Image" style="width: 120px; height: 120px;">
+                                {% endif %}
+                            </div>
+                            <div class="col-md-9">
+                                <h3>{{ student.admin.get_full_name }}</h3>
+                                <p class="mb-1"><strong>Course:</strong> {{ student.course_id.course_name }}</p>
+                                <p class="mb-1"><strong>Session:</strong> {{ student.session_year_id.session_start_year}} - {{ student.session_year_id.session_end_year }}</p>
+                                <p class="mb-1"><strong>Overall Performance:</strong>
+                                    <span class="badge 
+            {% if overall_grade == 'A+' or overall_grade == 'A' %}badge-success
+            {% elif overall_grade == 'B+' or overall_grade == 'B' %}badge-warning
+            {% elif overall_grade == 'C+' or overall_grade == 'C' %}badge-danger
+            {% else %}badge-danger
+            {% endif %}">
+                                        {{ overall_grade }} ({{ percentage }}%)
+                                    </span> - {{ overall_performance }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Print Button -->
+                <div class="mb-3 text-right">
+                    <button onclick="printResult()" class="btn btn-secondary">
+                        <i class="fas fa-print"></i> Print Result
+                    </button>
+                </div>
+
+                <!-- Results Table -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Subject-wise Results</h3>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="resultTable">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Subject</th>
+                                    <th>Internal Full Marks</th>
+                                    <th>Internal Obtained</th>
+                                    <th>Exam Full Marks</th>
+                                    <th>Exam Obtained</th>
+                                    <th>Total Marks</th>
+                                    <th>Grade</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in student_results %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ row.subject_id.subject_name }}</td>
+                                    <td>20</td>
+                                    <td>{{ row.subject_assignment_marks }}</td>
+                                    <td>80</td>
+                                    <td>{{ row.subject_exam_marks }}</td>
+                                    <td>
+                                        {% with total=row.subject_assignment_marks|add:row.subject_exam_marks %}
+                                        {{ total }}
+                                        {% endwith %}
+                                    </td>
+                                    <td>
+                                        {% with total=row.subject_assignment_marks|add:row.subject_exam_marks %}
+                                        {% if total >= 90 %}A+
+                                        {% elif total >= 80 %}A
+                                        {% elif total >= 70 %}B+
+                                        {% elif total >= 60 %}B
+                                        {% elif total >= 50 %}C+
+                                        {% elif total >= 40 %}C
+                                        {% else %}F
+                                        {% endif %}
+                                        {% endwith %}
+                                    </td>
+                                    <td>
+                                        {% with total=row.subject_assignment_marks|add:row.subject_exam_marks %}
+                                        {% if total >= 40 %}
+                                        <span class="badge badge-success">Pass</span>
+                                        {% else %}
+                                        <span class="badge badge-danger">Fail</span>
+                                        {% endif %}
+                                        {% endwith %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Performance Summary -->
+                <div class="card card-info">
+                    <div class="card-header">
+                        <h3 class="card-title">Performance Summary</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="info-box bg-success">
+                                    <span class="info-box-icon"><i class="fas fa-percentage"></i></span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text">Overall Percentage</span>
+                                        <span class="info-box-number">{{ percentage }}%</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="info-box bg-primary">
+                                    <span class="info-box-icon"><i class="fas fa-award"></i></span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text">Overall Grade</span>
+                                        <span class="info-box-number">{{ overall_grade }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="info-box bg-info">
+                                    <span class="info-box-icon"><i class="fas fa-chart-line"></i></span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text">Performance</span>
+                                        <span class="info-box-number">{{ overall_performance }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block custom_js %}
+<script>
+    // Print function
+    function printResult() {
+        // Store original content
+        const originalContent = document.body.innerHTML;
+        
+        // Get the elements we want to print
+        const studentInfo = document.querySelector('.card-primary').outerHTML;
+        const resultTable = document.getElementById('resultTable').outerHTML;
+        const performanceSummary = document.querySelector('.card-info').outerHTML;
+        
+        // Create print content
+        const printContent = `
+            <div style="padding: 20px;">
+                <h2 style="text-align:center">${'{{ student.admin.get_full_name }}'}'s Result</h2>
+                <h4 style="text-align:center">${'{{ student.course_id.course_name }}'} - ${'{{ student.session_year_id.session_start_year }}'} to ${'{{ student.session_year_id.session_end_year }}'}</h4>
+                ${studentInfo}
+                ${resultTable}
+                ${performanceSummary}
+            </div>
+        `;
+        
+        // Replace body content with print content
+        document.body.innerHTML = printContent;
+        
+        // Print the page
+        window.print();
+        
+        // Restore original content
+        document.body.innerHTML = originalContent;
+    }
+</script>
+{% endblock %}

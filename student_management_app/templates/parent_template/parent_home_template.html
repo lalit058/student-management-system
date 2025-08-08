@@ -1,0 +1,243 @@
+{% extends 'parent_template/base_template.html' %}
+{% block page_title %}Parent Dashboard{% endblock %}
+
+{% block main_content %}
+<section class="content">
+    <div class="container-fluid">
+        <!-- Dashboard Widgets Row -->
+        <div class="row">
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-info">
+                    <div class="inner">
+                        <h3>1</h3>
+                        <p>My Child</p>
+                    </div>
+                    <div class="icon">
+                        <i class="ion ion-person-stalker"></i>
+                    </div>
+                    <a href="{% url 'parent_manage_children' %}" class="small-box-footer">
+                        More info <i class="fas fa-arrow-circle-right"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-success">
+                    <div class="inner">
+                        <h3>{{ attendance_present }}</h3>
+                        <p>Present Days</p>
+                    </div>
+                    <div class="icon">
+                        <i class="ion ion-checkmark-round"></i>
+                    </div>
+                    <a href="{% url 'parent_view_attendance' %}" class="small-box-footer">
+                        View All <i class="fas fa-arrow-circle-right"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-warning">
+                    <div class="inner">
+                        <h3>{{ attendance_absent }}</h3>
+                        <p>Absent Days</p>
+                    </div>
+                    <div class="icon">
+                        <i class="ion ion-alert-circled"></i>
+                    </div>
+                    <a href="{% url 'parent_view_attendance' %}" class="small-box-footer">
+                        View All <i class="fas fa-arrow-circle-right"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-danger">
+                    <div class="inner">
+                        <h3>{{ unread_notifications }}</h3>
+                        <p>Unread Notifications</p>
+                    </div>
+                    <div class="icon">
+                        <i class="ion ion-email-unread"></i>
+                    </div>
+                    <a href="{% url 'parent_all_notification' %}" class="small-box-footer">
+                        View All <i class="fas fa-arrow-circle-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">Attendance Overview</h3>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="attendanceChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="card card-success">
+                    <div class="card-header">
+                        <h3 class="card-title">Subject-wise Attendance</h3>
+                    </div>
+                    <div class="card-body">
+                        <div id="subjectChartContainer">
+                            <canvas id="subjectChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
+                        </div>
+                        <div id="subjectChartError" class="text-center text-muted" style="display: none;">
+                            No attendance data available for subjects
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block custom_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+$(document).ready(function() {
+    // Debug output - fixed default filter syntax
+    console.log("[DEBUG] Subject stats data:", {{ subject_stats|default_if_none:"[]"|safe }});
+    
+    // 1. Attendance Pie Chart
+    try {
+        var ctx1 = document.getElementById('attendanceChart').getContext('2d');
+        new Chart(ctx1, {
+            type: 'doughnut',
+            data: {
+                labels: ['Present ({{ attendance_present|default:0 }})', 'Absent ({{ attendance_absent|default:0 }})'],
+                datasets: [{
+                    data: [
+                        {{ attendance_present|default:0 }}, 
+                        {{ attendance_absent|default:0 }}
+                    ],
+                    backgroundColor: ['#28a745', '#dc3545'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'right' },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                var label = context.label || '';
+                                var value = context.raw || 0;
+                                var total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                var percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+                                return `${label}: ${value} days (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    } catch (e) {
+        console.error("Error rendering attendance chart:", e);
+    }
+
+    // 2. Subject-wise Bar Chart
+    try {
+    var subjectChartEl = document.getElementById('subjectChart');
+    var errorElement = document.getElementById('subjectChartError');
+    
+    // Get subject data - now properly passed from Django
+    var subjectData = {{ subject_stats|safe }};
+    
+    if (!subjectData || subjectData.length === 0) {
+        subjectChartEl.style.display = 'none';
+        errorElement.style.display = 'block';
+        console.warn("No subject attendance data available");
+        return;
+    }
+    
+    // Prepare data
+    var subjects = [];
+    var presentData = [];
+    var absentData = [];
+    
+    subjectData.forEach(function(subject) {
+        subjects.push(subject.name || subject.subject_name || 'Unknown Subject');
+        presentData.push(subject.present || 0);
+        absentData.push(subject.absent || 0);
+    });
+    
+    console.log("[DEBUG] Chart data prepared:", {
+        subjects: subjects,
+        present: presentData,
+        absent: absentData
+    });
+    
+    // Create chart
+    var ctx2 = subjectChartEl.getContext('2d');
+    new Chart(ctx2, {
+        type: 'bar',
+        data: {
+            labels: subjects,
+            datasets: [
+                {
+                    label: 'Present',
+                    data: presentData,
+                    backgroundColor: '#28a745'
+                },
+                {
+                    label: 'Absent',
+                    data: absentData,
+                    backgroundColor: '#dc3545'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    stacked: true,
+                    ticks: {
+                        autoSkip: false,
+                        maxRotation: 45,
+                        minRotation: 45
+                    }
+                },
+                y: {
+                    stacked: true,
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        afterLabel: function(context) {
+                            var dataset = context.dataset;
+                            var total = context.dataset.data[context.dataIndex] + 
+                                         context.chart.data.datasets[1].data[context.dataIndex];
+                            var percentage = total > 0 ? Math.round((context.raw / total) * 100) : 0;
+                            return `Percentage: ${percentage}%`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+    
+} catch (e) {
+    console.error("Error rendering subject chart:", e);
+    document.getElementById('subjectChartContainer').innerHTML = 
+        '<div class="alert alert-danger">Error loading subject attendance data: ' + e.message + '</div>';
+}
+});
+</script>
+{% endblock %}

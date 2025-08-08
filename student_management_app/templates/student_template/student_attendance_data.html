@@ -1,0 +1,251 @@
+{% extends 'student_template/base_template.html' %}
+
+{% block custom_css %}
+<style>
+    .col-lg-3.attendance_div_red {
+        padding: 10px;
+        padding-top: 20px;
+        padding-bottom: 20px;
+        background: #f44336;
+        border: 10px solid white;
+        text-align: center;
+        color: #fff;
+        border-radius: 30px;
+        box-shadow: 1px 1px 1px grey;
+        margin-top: 10px;
+        margin-bottom: 10px;
+    }
+    .col-lg-3.attendance_div_green {
+        padding: 10px;
+        padding-top: 20px;
+        padding-bottom: 20px;
+        background: #388e3c;
+        border: 10px solid white;
+        text-align: center;
+        color: #fff;
+        border-radius: 30px;
+        box-shadow: 1px 1px 1px grey;
+        margin-top: 10px;
+        margin-bottom: 10px;
+    }
+    .search-parameters {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+    .debug-info {
+        font-size: 0.9em;
+        color: #6c757d;
+    }
+    /* Print-specific styles */
+    @media print {
+        body * {
+            visibility: hidden;
+        }
+        .print-section, .print-section * {
+            visibility: visible;
+        }
+        .print-section {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            padding: 20px;
+        }
+        .print-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .print-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .print-table th, .print-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .print-table th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        .present {
+            color: #388e3c;
+            font-weight: bold;
+        }
+        .absent {
+            color: #f44336;
+            font-weight: bold;
+        }
+        .no-print {
+            display: none !important;
+        }
+    }
+</style>
+{% endblock custom_css %}
+
+{% block page_title %}
+Attendance Data
+{% endblock page_title %}
+
+{% block main_content %}
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">View Attendance</h3>
+                        {% if attendance_reports %}
+                        <div class="card-tools no-print">
+                            <button class="btn btn-sm btn-info" onclick="printAttendance()">
+                                <i class="fas fa-print"></i> Print/Preview
+                            </button>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="card-body">
+                        <!-- Search Parameters Display -->
+                        {% if start_date and end_date %}
+                        <div class="search-parameters mb-4">
+                            <h5>Search Parameters:</h5>
+                            <p>
+                                Subject: <strong>{{ subject.subject_name|default:"Not specified" }}</strong><br>
+                                Date Range: <strong>{{ start_date }} to {{ end_date }}</strong>
+                            </p>
+                        </div>
+                        {% endif %}
+
+                        <!-- Attendance Results -->
+                        <div class="row">
+                            {% if attendance_reports %}
+                                {% for attendance_report in attendance_reports %}
+                                    {% if attendance_report.status == True %}
+                                    <div class="col-lg-3 attendance_div_green">
+                                        <b>Date : {{ attendance_report.attendance_id.attendance_date }}</b>
+                                        <br>
+                                        <b>[ Status : Present ]</b>
+                                    </div>
+                                    {% else %}
+                                    <div class="col-lg-3 attendance_div_red">
+                                        <b>Date : {{ attendance_report.attendance_id.attendance_date }}</b>
+                                        <br>
+                                        <b>[ Status : Absent ]</b>
+                                    </div>
+                                    {% endif %}
+                                {% endfor %}
+                            {% else %}
+                                <div class="col-12">
+                                    <div class="alert alert-info text-center">
+                                        <h4><i class="icon fas fa-info-circle"></i> No Attendance Records Found</h4>
+                                        <p>
+                                            No attendance data was found for the selected criteria.<br>
+                                            Please check:
+                                        </p>
+                                        <ul class="text-left">
+                                            <li>The date range you selected</li>
+                                            <li>Whether attendance was taken for this subject</li>
+                                            <li>Whether you were enrolled during this period</li>
+                                        </ul>
+                                        <div class="debug-info mt-3">
+                                            Subject ID: {{ subject.id|default:"None" }}<br>
+                                            Student ID: {{ request.user.id }}<br>
+                                            Date Range: {{ start_date|default:"None" }} to {{ end_date|default:"None" }}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Debug Information (for development only) -->
+                        {% if debug %}
+                        <div class="mt-4 p-3 bg-light rounded no-print">
+                            <h5>Debug Information:</h5>
+                            <pre>Query: {{ attendance_query|default:"None" }}</pre>
+                            <pre>Reports: {{ attendance_reports|length }} records found</pre>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Hidden print section -->
+<div id="printSection" style="display: none;">
+    <div class="print-section">
+        <div class="print-header">
+            <h2>Attendance Report</h2>
+            <p>Student: <strong>{{ request.user.first_name }} {{ request.user.last_name }}</strong></p>
+            <p>Student ID: <strong>{{ request.user.username }}</strong></p>
+            <p>Subject: <strong>{{ subject.subject_name }}</strong> (ID: {{ subject.id }})</p>
+            <p>Date Range: <strong>{{ start_date }} to {{ end_date }}</strong></p>
+            <p>Printed on: <strong>{% now "F j, Y H:i" %}</strong></p>
+        </div>
+        <table class="print-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Day</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for attendance_report in attendance_reports %}
+                <tr>
+                    <td>{{ attendance_report.attendance_id.attendance_date|date:"M d, Y" }}</td>
+                    <td>{{ attendance_report.attendance_id.attendance_date|date:"l" }}</td>
+                    <td class="{% if attendance_report.status %}present{% else %}absent{% endif %}">
+                        {% if attendance_report.status %}Present{% else %}Absent{% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- /.content -->
+{% endblock main_content %}
+
+{% block custom_js %}
+<script>
+function printAttendance() {
+    // Open print window
+    var printWindow = window.open('', '', 'width=800,height=600');
+    
+    // Get print content
+    var printContent = document.getElementById('printSection').innerHTML;
+    
+    // Write content to print window
+    printWindow.document.write('<html><head><title>Attendance Report</title>');
+    printWindow.document.write('<style>');
+    printWindow.document.write(`
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .print-section { width: 100%; }
+        .print-header { text-align: center; margin-bottom: 20px; }
+        .print-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .print-table th, .print-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        .print-table th { background-color: #f2f2f2; font-weight: bold; }
+        .present { color: #388e3c; font-weight: bold; }
+        .absent { color: #f44336; font-weight: bold; }
+        .summary { margin-top: 20px; text-align: center; font-weight: bold; }
+    `);
+    printWindow.document.write('</style></head><body>');
+    printWindow.document.write(printContent);
+    printWindow.document.write('</body></html>');
+    
+    // Close document
+    printWindow.document.close();
+    
+    // Focus and print
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
+}
+</script>
+{% endblock custom_js %}

@@ -1,0 +1,236 @@
+{% extends 'staff_template/base_template.html' %}
+{% block page_title %}
+Edit Results
+{% endblock %}
+{% block main_content %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">Edit Student Results</h3>
+                    </div>
+                    <form role="form" method="post" action="{% url 'edit_student_result' %}" id="resultForm">
+                        {% csrf_token %}
+                        <div class="card-body">
+                            <div class="form-group">
+                                {{ form.subject_id.label_tag }}
+                                {{ form.subject_id }}
+                                <small class="form-text text-muted">
+                                    Select subject to load students
+                                </small>
+                            </div>
+                            <div class="form-group">
+                                {{ form.student_id.label_tag }}
+                                {{ form.student_id }}
+                                <small class="form-text text-muted">
+                                    Select student to edit marks
+                                </small>
+                            </div>
+                            <div class="form-group">
+                                {{ form.assignment_marks.label_tag }}
+                                {{ form.assignment_marks }}
+                                <small class="form-text text-muted">
+                                    Enter assignment marks (0-20)
+                                </small>
+                            </div>
+                            <div class="form-group">
+                                {{ form.exam_marks.label_tag }}
+                                {{ form.exam_marks }}
+                                <small class="form-text text-muted">
+                                    Enter exam marks (0-80)
+                                </small>
+                            </div>
+                            <!-- Grade Calculation Section -->
+                            <div class="form-group">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <label>Total Marks:</label>
+                                        <input type="text" class="form-control" id="total_marks" readonly value="0">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label>Grade:</label>
+                                        <input type="text" class="form-control" id="calculated_grade" readonly value="-">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label>Status:</label>
+                                        <input type="text" class="form-control" id="result_status" readonly value="-">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                {% if messages %}
+                                    {% for message in messages %}
+                                        {% if message.tags == 'error' %}
+                                            <div class="alert alert-danger">{{ message }}</div>
+                                        {% elif message.tags == 'success' %}
+                                            <div class="alert alert-success">{{ message }}</div>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <button type="submit" class="btn btn-primary">Update Result</button>
+                            <a href="{% url 'subject_wise_results' %}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block custom_js %}
+<script>
+$(document).ready(function() {
+    // Function to calculate grade and status
+    function calculateResults() {
+        var assignment = parseFloat($("#id_assignment_marks").val()) || 0;
+        var exam = parseFloat($("#id_exam_marks").val()) || 0;
+        var total = assignment + exam;
+        
+        // Update total marks
+        $("#total_marks").val(total.toFixed(2));
+        
+        // Calculate grade
+        var grade = '-';
+        if (!isNaN(total)) {
+            if (total >= 90) grade = 'A';
+            else if (total >= 80) grade = 'B';
+            else if (total >= 70) grade = 'C';
+            else if (total >= 60) grade = 'D';
+            else grade = 'F';
+        }
+        $("#calculated_grade").val(grade);
+        
+        // Update status
+        var status = total >= 40 ? 'Pass' : 'Fail';
+        $("#result_status").val(status);
+    }
+    
+    // Calculate when marks change
+    $("#id_assignment_marks, #id_exam_marks").on('input', function() {
+        calculateResults();
+        
+        // Validate against max marks
+        var field = $(this);
+        if (field.attr('id') === 'id_assignment_marks') {
+            var max = 20;
+        } else {
+            var max = 80;
+        }
+        
+        var value = parseFloat(field.val());
+        if (value > max) {
+            alert("Marks cannot exceed maximum value of " + max);
+            field.val(max);
+            calculateResults();
+        }
+    });
+    
+    // AJAX student loading
+    $("#id_subject_id").change(function() {
+    var subject_id = $(this).val();
+    
+    if (!subject_id) {
+        $("#id_student_id").html('<option value="">Select Subject First</option>');
+        return;
+    }
+
+    $.ajax({
+        url: "{% url 'get_students_for_result' %}",
+        type: 'POST',
+        data: {
+            'subject_id': subject_id,
+            'csrfmiddlewaretoken': '{{ csrf_token }}'
+        },
+        success: function(response) {
+            var studentSelect = $("#id_student_id");
+            studentSelect.empty();
+            
+            if (response && response.length > 0) {
+                studentSelect.append($('<option></option>').val('').text('Select Student'));
+                $.each(response, function(index, student) {
+                    studentSelect.append(
+                        $('<option></option>').val(student.id).text(student.name)
+                    );
+                });
+            } else {
+                studentSelect.append('<option value="">No students found</option>');
+            }
+        },
+        error: function() {
+            $("#id_student_id").html('<option value="">Error loading students</option>');
+        }
+    });
+});
+
+    // Add this to your existing JavaScript
+$("form").submit(function(e) {
+    // Validate marks before submission
+    var assignment = parseFloat($("#id_assignment_marks").val()) || 0;
+    var exam = parseFloat($("#id_exam_marks").val()) || 0;
+    
+    if (isNaN(assignment) || isNaN(exam)) {
+        alert("Please enter valid marks");
+        return false;
+    }
+    
+    if (!$("#id_subject_id").val() || !$("#id_student_id").val()) {
+        alert("Please select both subject and student");
+        return false;
+    }
+    
+    return true;
+});
+
+
+$("#resultForm").submit(function(e) {
+    // Show loading state
+    $("button[type='submit']").prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Updating...');
+    
+    // Validate marks
+    var assignment = parseFloat($("#id_assignment_marks").val()) || 0;
+    var exam = parseFloat($("#id_exam_marks").val()) || 0;
+    
+    if (isNaN(assignment) || isNaN(exam)) {
+        alert("Please enter valid marks");
+        $("button[type='submit']").prop('disabled', false).html('Update Result');
+        return false;
+    }
+    
+    return true;
+});
+
+
+    // If editing existing result, fetch marks when student is selected
+    $("#id_student_id").change(function() {
+        var student_id = $(this).val();
+        var subject_id = $("#id_subject_id").val();
+        
+        if (student_id && subject_id) {
+            $.ajax({
+                url: "{% url 'fetch_result_student' %}",
+                type: 'POST',
+                data: {
+                    'student_id': student_id,
+                    'subject_id': subject_id,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        $("#id_assignment_marks").val(response.assign_marks);
+                        $("#id_exam_marks").val(response.exam_marks);
+                        calculateResults();
+                    }
+                }
+            });
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,219 @@
+{% extends 'staff_template/base_template.html' %}
+{% load static %}
+{% block page_title %}
+Staff Notifications
+{% endblock page_title %}
+{% block main_content %}
+<script>
+    var markStaffNotificationsAsReadUrl = "{% url 'mark_staff_notifications_as_read' %}";
+</script>
+
+<section class="content">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-12">
+        <div class="card card-primary card-outline">
+          <div class="card-header bg-gradient-navy">
+            <h3 class="card-title text-white">
+              <i class="fas fa-bell mr-2"></i>
+              All Notifications
+            </h3>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover table-striped">
+                <thead class="bg-lightblue">
+                  <tr>
+                    <th>ID</th>
+                    <th>Sender</th>
+                    <th>Message</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th class="text-center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for notification in notifications %}
+                  <tr>
+                    <td class="align-middle font-weight-bold text-primary">#{{ notification.id }}</td>
+                    <td class="align-middle">
+                      {% if notification.admin_id %}
+                        <span class="badge badge-primary">Admin</span>
+                        <div class="text-muted small">ID: {{ notification.admin_id }}</div>
+                      {% else %}
+                        <span class="badge badge-dark">System</span>
+                      {% endif %}
+                    </td>
+                    <td class="align-middle">
+                      {{ notification.message }}
+                      {% if not notification.is_read %}
+                        <span class="badge badge-danger ml-2">New</span>
+                      {% endif %}
+                    </td>
+                    <td class="align-middle">{{ notification.created_at|date:"M d, Y H:i" }}</td>
+                    <td class="align-middle">
+                      {% if notification.is_read %}
+                        <span class="badge badge-success">Read</span>
+                      {% else %}
+                        <span class="badge badge-warning">Unread</span>
+                      {% endif %}
+                    </td>
+                    <td class="align-middle text-center">
+                      {% if notification.admin_id %}
+                        <button class="btn btn-sm btn-primary reply-btn" 
+                                data-notification-id="{{ notification.id }}"
+                                data-sender-id="{{ notification.admin_id }}"
+                                data-sender-name="Admin"
+                                data-original-message="{{ notification.message }}">
+                          <i class="fas fa-reply"></i> Reply
+                        </button>
+                      {% else %}
+                        <span class="text-muted">Cannot reply</span>
+                      {% endif %}
+                    </td>
+                  </tr>
+                  {% empty %}
+                  <tr>
+                    <td colspan="6" class="text-center py-4">No notifications found</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card-footer clearfix">
+            {% if notifications.has_other_pages %}
+              <ul class="pagination pagination-sm m-0 float-right">
+                {% if notifications.has_previous %}
+                  <li class="page-item"><a class="page-link" href="?page=1">&laquo;</a></li>
+                  <li class="page-item"><a class="page-link" href="?page={{ notifications.previous_page_number }}">Previous</a></li>
+                {% endif %}
+                
+                {% for i in notifications.paginator.page_range %}
+                  {% if notifications.number == i %}
+                    <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+                  {% elif i > notifications.number|add:'-3' and i < notifications.number|add:'3' %}
+                    <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+                  {% endif %}
+                {% endfor %}
+                
+                {% if notifications.has_next %}
+                  <li class="page-item"><a class="page-link" href="?page={{ notifications.next_page_number }}">Next</a></li>
+                  <li class="page-item"><a class="page-link" href="?page={{ notifications.paginator.num_pages }}">&raquo;</a></li>
+                {% endif %}
+              </ul>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Reply Modal -->
+<div class="modal fade" id="replyModal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header bg-gradient-navy">
+        <h5 class="modal-title text-white">Reply to Admin</h5>
+        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="replyForm" method="POST" action="{% url 'staff_send_reply' %}">
+          {% csrf_token %}
+          <input type="hidden" name="notification_id" id="notificationId">
+          <input type="hidden" name="admin_id" id="adminId">
+          
+          <div class="form-group">
+            <label>Replying to:</label>
+            <input type="text" class="form-control" id="adminName" readonly>
+          </div>
+          
+          <div class="form-group">
+            <label>Original Message:</label>
+            <textarea class="form-control" id="originalMessage" rows="2" readonly></textarea>
+          </div>
+          
+          <div class="form-group">
+            <label>Your Reply:</label>
+            <textarea class="form-control" name="reply_message" id="replyMessage" rows="3" required placeholder="Type your reply message here..."></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="submitReply()">
+          <i class="fas fa-paper-plane mr-1"></i> Send Reply
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    // Mark notifications as read
+    if (typeof markStaffNotificationsAsReadUrl !== 'undefined') {
+        $.ajax({
+            url: markStaffNotificationsAsReadUrl,
+            type: "POST",
+            data: { csrfmiddlewaretoken: '{{ csrf_token }}' },
+            success: function() { 
+                $('.notification-count').text('0').hide();
+            },
+            error: function(xhr) { console.error("Error:", xhr.responseText); }
+        });
+    }
+
+    // Reply functionality - only for admin messages
+    $('.reply-btn').click(function() {
+        $('#notificationId').val($(this).data('notification-id'));
+        $('#adminId').val($(this).data('sender-id'));
+        $('#adminName').val($(this).data('sender-name'));
+        $('#originalMessage').val($(this).data('original-message'));
+        $('#replyMessage').val('');
+        $('#replyModal').modal('show');
+    });
+
+    window.submitReply = function() {
+        var replyMessage = $('#replyMessage').val().trim();
+        if (replyMessage === '') {
+            alert('Please enter your reply message');
+            return;
+        }
+        
+        // Add loading state
+        var submitBtn = $('#replyModal').find('.btn-primary');
+        submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Sending...');
+        
+        $('#replyForm').submit();
+    };
+});
+</script>
+
+<style>
+  .bg-gradient-navy {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%) !important;
+  }
+  .bg-lightblue {
+    background-color: #3c8dbc !important;
+    color: white;
+  }
+  .badge-primary { background-color: #3c8dbc; }
+  .badge-success { background-color: #28a745; }
+  .badge-warning { background-color: #ffc107; color: #212529; }
+  .badge-danger { background-color: #dc3545; }
+  .badge-dark { background-color: #343a40; }
+  .table-hover tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.05) !important;
+  }
+  .table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(0, 0, 0, 0.02);
+  }
+  #replyMessage {
+    min-height: 120px;
+  }
+</style>
+{% endblock main_content %}

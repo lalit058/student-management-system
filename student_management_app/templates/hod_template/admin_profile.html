@@ -1,0 +1,175 @@
+{% extends 'hod_template/base_template.html' %}
+{% load static %}
+{% block page_title %}Admin Profile | {{ admin.admin.username }}{% endblock %}
+{% block main_content %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">Admin Profile</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4 text-center">
+                                {% if admin.profile_pic %}
+                                    <img src="{{ admin.profile_pic.url }}" class="img-circle elevation-2" width="200" height="200" alt="Profile">
+                                {% else %}
+                                    <img src="{% static 'dist/img/user2-160x160.jpg' %}" class="img-circle elevation-2" width="200" height="200" alt="Default Profile">
+                                {% endif %}
+                                <h3 class="mt-3">{{ admin.admin.get_full_name }}</h3>
+                                <p class="text-muted">Admin ID: {{ admin.admin.id }}</p>
+                                <div class="mt-2">
+                                    <span class="badge badge-success p-2">
+                                        Administrator
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="col-md-8">
+                                <table class="table table-bordered">
+                                    <tr>
+                                        <th>Username</th>
+                                        <td>{{ admin.admin.username }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Email</th>
+                                        <td>{{ admin.admin.email|default:"Not provided" }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Qualification</th>
+                                        <td>{{ admin.qualification|default:"Not provided" }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Gender</th>
+                                        <td>{{ admin.gender }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Phone Number</th>
+                                        <td>{{ admin.phone_number|default:"Not provided" }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Address</th>
+                                        <td>{{ admin.address|default:"Not provided" }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Date Joined</th>
+                                        <td>{{ admin.admin.date_joined|date:"F j, Y" }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Last Login</th>
+                                        <td>{{ admin.admin.last_login|date:"F j, Y H:i"|default:"Never" }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Account Created</th>
+                                        <td>{{ admin.created_at|date:"F j, Y H:i" }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Last Updated</th>
+                                        <td>{{ admin.updated_at|date:"F j, Y H:i" }}</td>
+                                    </tr>
+                                </table>
+                                <div class="d-flex justify-content-end mt-3">
+                                    <a href="{% url 'edit_admin' admin_id=admin.admin.id %}" class="btn btn-primary mr-2">
+                                        <i class="fas fa-edit"></i> Edit Profile
+                                    </a>
+                                    <button onclick="printProfile()" class="btn btn-secondary">
+                                        <i class="fas fa-print"></i> Print Profile
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Hidden printable area -->
+<div id="printableArea" style="display: none;">
+    <div style="text-align: center; margin-bottom: 20px;">
+        <h2>Admin Profile</h2>
+        <h3>{{ admin.admin.get_full_name }}</h3>
+        <p>Admin ID: {{ admin.admin.id }}</p>
+        <p><strong>Role:</strong> Administrator</p>
+    </div>
+    <div style="display: flex; margin-bottom: 30px;">
+        <div style="flex: 1; text-align: center;">
+            {% if admin.profile_pic %}
+                <img src="{{ admin.profile_pic.url }}" style="border-radius: 50%; width: 150px; height: 150px; object-fit: cover;" alt="Profile">
+            {% else %}
+                <img src="{% static 'dist/img/user2-160x160.jpg' %}" style="border-radius: 50%; width: 150px; height: 150px; object-fit: cover;" alt="Default Profile">
+            {% endif %}
+        </div>
+        <div style="flex: 2; padding-left: 30px;">
+            <table style="width: 100%; border-collapse: collapse;">
+                <tr style="border-bottom: 1px solid #ddd;">
+                    <th style="text-align: left; padding: 8px; width: 30%;">Username</th>
+                    <td style="padding: 8px;">{{ admin.admin.username }}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #ddd;">
+                    <th style="text-align: left; padding: 8px;">Email</th>
+                    <td style="padding: 8px;">{{ admin.admin.email|default:"Not provided" }}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #ddd;">
+                    <th style="text-align: left; padding: 8px;">Qualification</th>
+                    <td style="padding: 8px;">{{ admin.qualification|default:"Not provided" }}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #ddd;">
+                    <th style="text-align: left; padding: 8px;">Gender</th>
+                    <td style="padding: 8px;">{{ admin.gender }}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #ddd;">
+                    <th style="text-align: left; padding: 8px;">Phone Number</th>
+                    <td style="padding: 8px;">{{ admin.phone_number|default:"Not provided" }}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #ddd;">
+                    <th style="text-align: left; padding: 8px;">Address</th>
+                    <td style="padding: 8px;">{{ admin.address|default:"Not provided" }}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #ddd;">
+                    <th style="text-align: left; padding: 8px;">Date Joined</th>
+                    <td style="padding: 8px;">{{ admin.admin.date_joined|date:"F j, Y" }}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #ddd;">
+                    <th style="text-align: left; padding: 8px;">Last Login</th>
+                    <td style="padding: 8px;">{{ admin.admin.last_login|date:"F j, Y H:i"|default:"Never" }}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #ddd;">
+                    <th style="text-align: left; padding: 8px;">Account Created</th>
+                    <td style="padding: 8px;">{{ admin.created_at|date:"F j, Y H:i" }}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #ddd;">
+                    <th style="text-align: left; padding: 8px;">Last Updated</th>
+                    <td style="padding: 8px;">{{ admin.updated_at|date:"F j, Y H:i" }}</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div style="text-align: center; margin-top: 20px; font-size: 12px; color: #666;">
+        <p>Printed on: {% now "F j, Y H:i" %}</p>
+        <p>{{ request.user.get_full_name }} ({{ request.user.username }})</p>
+    </div>
+</div>
+
+<script>
+function printProfile() {
+    // Get the printable content
+    var printContents = document.getElementById('printableArea').innerHTML;
+    var originalContents = document.body.innerHTML;
+    
+    // Replace body content with printable content
+    document.body.innerHTML = printContents;
+    
+    // Print the page
+    window.print();
+    
+    // Restore original content
+    document.body.innerHTML = originalContents;
+    
+    // Reload page to restore functionality
+    window.location.reload();
+}
+</script>
+{% endblock %}

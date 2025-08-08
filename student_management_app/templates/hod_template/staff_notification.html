@@ -1,0 +1,252 @@
+{% extends 'hod_template/base_template.html' %}
+{% block page_title %}
+Send Notification Staff
+{% endblock page_title %}
+{% block main_content %}
+<!-- Main content -->
+<section class="content">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-12">
+        <div class="card card-primary card-outline">
+          <div class="card-header bg-gradient-navy">
+            <h3 class="card-title text-white">
+              <i class="fas fa-chalkboard-teacher mr-2"></i>
+              Staff Details
+            </h3>
+            <div class="card-tools">
+              <div class="input-group input-group-sm" style="width: 200px;">
+                <input type="text" name="table_search" class="form-control float-right" placeholder="Search staff...">
+                <div class="input-group-append">
+                  <button type="button" class="btn btn-default">
+                    <i class="fas fa-search"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- /.card-header -->
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover table-striped">
+                <thead class="bg-lightblue">
+                  <tr>
+                    <th>ID</th>
+                    <th>Profile</th>
+                    <th>Name</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Last Login</th>
+                    <th class="text-center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for staff in staffs %}
+                  <tr class="{% cycle 'bg-white' 'bg-gray-50' %}">
+                    <td class="align-middle font-weight-bold text-primary">#{{ staff.admin.id }}</td>
+                    <td class="align-middle">
+                      <div class="avatar-circle-sm">
+                        {% if staff.profile_pic %}
+                          <img src="{{ staff.profile_pic }}" class="img-circle" alt="Profile">
+                        {% else %}
+                          <img src="{% static 'dist/img/user2-160x160.jpg' %}" class="img-circle" alt="Default Profile">
+                        {% endif %}
+                      </div>
+                    </td>
+                    <td class="align-middle">
+                      <div class="d-flex flex-column">
+                        <span class="font-weight-bold">{{ staff.admin.first_name }} {{ staff.admin.last_name }}</span>
+                        <small class="text-muted">{{ staff.gender }}</small>
+                      </div>
+                    </td>
+                    <td class="align-middle">
+                      <span class="badge badge-info">{{ staff.admin.username }}</span>
+                    </td>
+                    <td class="align-middle">{{ staff.admin.email }}</td>
+                    <td class="align-middle">
+                      {% if staff.admin.last_login %}
+                        {{ staff.admin.last_login|date:"Y-m-d H:i" }}
+                      {% else %}
+                        Never
+                      {% endif %}
+                    </td>
+                    <td class="align-middle text-center">
+                      <button class="btn btn-success btn-sm show_notification" 
+                              data-toggle="modal"
+                              data-target="#notificationModal" 
+                              data-staff-id="{{ staff.admin.id }}"
+                              data-staff-name="{{ staff.admin.username }}">
+                        <i class="fas fa-bell mr-1"></i> Notify
+                      </button>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <!-- /.card-body -->
+        </div>
+        <!-- /.card -->
+      </div>
+    </div>
+  </div>
+</section>
+<!-- /.content -->
+
+<!-- Notification Modal -->
+<div class="modal fade" id="notificationModal" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-gradient-navy">
+        <h4 class="modal-title text-white">Send Notification to <span id="staff_name_span"></span></h4>
+        <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <textarea name="message" class="form-control" id="notification_message" rows="3" placeholder="Enter notification message..."></textarea>
+          <input type="hidden" name="staff_id" id="staff_id">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" id="send_notification_btn">
+          <i class="fas fa-paper-plane mr-1"></i> Send
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .bg-gradient-navy {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%) !important;
+  }
+  
+  .bg-lightblue {
+    background-color: #3c8dbc !important;
+    color: white;
+  }
+  
+  .table-hover tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.05) !important;
+  }
+  
+  .table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(0, 0, 0, 0.02);
+  }
+  
+  .avatar-circle-sm {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid #dee2e6;
+  }
+  
+  .avatar-circle-sm img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+</style>
+
+{% endblock main_content %}
+
+{% block custom_js %}
+<script>
+  // Function to get CSRF token
+  function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+          const cookies = document.cookie.split(';');
+          for (let i = 0; i < cookies.length; i++) {
+              const cookie = cookies[i].trim();
+              if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                  cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                  break;
+              }
+          }
+      }
+      return cookieValue;
+  }
+
+  $(document).ready(function() {
+    // Set up modal with staff data when button is clicked
+    $(".show_notification").click(function(){
+        var staff_id = $(this).data('staff-id');  // Make sure this is the Staffs model ID
+        var staff_name = $(this).data('staff-name');
+        
+        $("#staff_id").val(staff_id);
+        $("#staff_name_span").text(staff_name);
+    });
+
+    // Handle sending notification
+    $("#send_notification_btn").click(function(){
+        var btn = $(this);
+        var staff_id = $("#staff_id").val();
+        var message = $("#notification_message").val().trim();
+        
+        if(!message) {
+            alert("Please enter a message");
+            return;
+        }
+
+        // Disable button to prevent multiple clicks
+        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Sending...');
+
+        // Get CSRF token from cookie
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        const csrftoken = getCookie('csrftoken');
+
+        $.ajax({
+            url: "{% url 'send_staff_notification' %}",
+            type: "POST",
+            headers: {
+                "X-CSRFToken": csrftoken,
+                "Content-Type": "application/json",
+            },
+            data: JSON.stringify({
+                staff_id: staff_id,
+                message: message
+            }),
+            success: function(response) {
+                if(response.status === "success") {
+                    alert("Notification sent successfully!");
+                    $("#notificationModal").modal('hide');
+                    $("#notification_message").val(''); // Clear the message
+                } else {
+                    alert("Error: " + response.message);
+                }
+            },
+            error: function(xhr, status, error) {
+                try {
+                    var err = JSON.parse(xhr.responseText);
+                    alert("Error: " + err.message);
+                } catch(e) {
+                    alert("Error sending notification. Please try again.");
+                }
+                console.error("Error details:", xhr.responseText);
+            },
+            complete: function() {
+                // Re-enable button
+                btn.prop('disabled', false).html('<i class="fas fa-paper-plane mr-1"></i> Send');
+            }
+        });
+    });
+});
+</script>
+{% endblock custom_js %}

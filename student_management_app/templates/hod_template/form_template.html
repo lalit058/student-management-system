@@ -1,0 +1,132 @@
+<form role="form" action="{{ action_path }}" method="post" enctype="multipart/form-data" id="student-form" novalidate>
+    {% csrf_token %}
+    <div class="card-body">
+        {% for field in form %}
+        
+        <div class="form-group" style="position: relative;">
+            {% if field.name != 'password' %}{{ field.errors }}{% endif %}
+            {{ field.label_tag }}
+            
+            {% if field.name == 'password' %}
+            <div style="position: relative;">
+                {{ field }}
+                <button class="toggle-password" type="button" 
+                        style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+                               background: none; border: none; cursor: pointer; padding: 0; outline: none;
+                               z-index: 2; display: none;">
+                    <i class="fas fa-eye"></i>
+                </button>
+            </div>
+            <div id="password-strength" class="validation-message small"></div>
+            {% else %}
+                {{ field }}
+                {% if field.name == 'username' %}
+                <div id="username-error" class="validation-message small"></div>
+                {% elif field.name == 'phone_number' %}
+                <div id="phone-error" class="validation-message small"></div>
+                {% elif field.name == 'email' %}
+                <div id="email-error" class="validation-message small"></div>
+                {% endif %}
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="card-footer">
+        <button type="submit" class="btn btn-primary btn-block" id="submit-btn">{{ button_text }}</button>
+    </div>
+</form>
+
+<!-- Add Font Awesome CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+<style>
+/* Password validation container styling */
+#password-strength {
+    margin-top: 5px;
+}
+
+/* Password requirements styling */
+.password-requirements {
+    background: #f8f9fa;
+    padding: 10px;
+    border-radius: 4px;
+    margin-top: 5px;
+}
+
+.password-requirements.text-success {
+    border-left-color: #28a745;
+}
+
+.password-requirements.text-danger {
+    border-left-color: #dc3545;
+}
+
+.password-requirements ul {
+    padding-left: 20px;
+    margin: 5px 0;
+}
+
+.password-requirements li {
+    list-style-type: none;
+    margin-bottom: 3px;
+}
+
+.password-requirements small.text-muted {
+    display: block !important;
+    margin-top: 8px;
+    color: #6c757d !important;
+    font-style: italic;
+}
+
+/* Hide all JSON output */
+#password-strength pre,
+#password-strength + pre {
+    display: none !important;
+}
+
+/* Remove browser validation icons */
+input.is-valid {
+    background-image: none !important;
+    padding-right: 35px !important;
+}
+
+input[type="password"] {
+    padding-right: 35px !important;
+}
+
+/* Validation message styling */
+.validation-message {
+    font-size: 0.875em;
+    margin-top: 0.25rem;
+}
+
+.text-success {
+    color: #28a745;
+}
+
+.text-danger {
+    color: #dc3545;
+}
+
+/* Form field styling */
+.is-valid {
+    border-color: #28a745 !important;
+}
+
+.is-invalid {
+    border-color: #dc3545 !important;
+}
+
+/* Password toggle button styling */
+.toggle-password {
+    opacity: 0.6;
+    transition: opacity 0.2s;
+}
+
+.toggle-password:hover {
+    opacity: 1;
+}
+
+
+</style>

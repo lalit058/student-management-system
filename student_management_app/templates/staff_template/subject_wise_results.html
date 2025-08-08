@@ -1,0 +1,275 @@
+{% extends 'staff_template/base_template.html' %}
+
+{% block main_content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card card-primary">
+                <div class="card-header">
+                    <h3 class="card-title">Subject Wise Results</h3>
+                    {% if selected_subject %}
+                    <div class="card-tools">
+                        <button id="printBtn" class="btn btn-info">
+                            <i class="fas fa-print"></i> Print/Export
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Display messages -->
+                {% if messages %}
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show m-2">
+                        {{ message }}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+                
+                <!-- Subject Selection Form -->
+                <div class="card-body">
+                    <form method="GET" action="{% url 'subject_wise_results' %}">
+                        <div class="form-group row">
+                            <label class="col-sm-2 col-form-label">Select Subject:</label>
+                            <div class="col-sm-8">
+                                <select class="form-control" name="subject" required>
+                                    <option value="">-- Select Subject --</option>
+                                    {% for subject in subjects %}
+                                    <option value="{{ subject.id }}" 
+                                        {% if selected_subject_id == subject.id %}selected{% endif %}>
+                                        {{ subject.subject_name }} ({{ subject.course_id.course_name }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-sm-2">
+                                <button type="submit" class="btn btn-primary">Show Results</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Results Table -->
+                {% if selected_subject %}
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4>Results for {{ selected_subject.subject_name }} ({{ selected_subject.course_id.course_name }})</h4>
+                        <div class="form-group mb-0">
+                            <input type="text" class="form-control" id="searchInput" placeholder="Search students...">
+                        </div>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover" id="resultsTable">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Student Name</th>
+                                    <th>Internal Full Marks</th>
+                                    <th>Obtained</th>
+                                    <th>Exam Full Marks</th>
+                                    <th>Obtained</th>
+                                    <th>Total Obtained</th>
+                                    <th>Grade</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for result in results %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ result.student_id.admin.get_full_name }}</td>
+                                    <td>{{ selected_subject.internal_full_marks|default:20 }}</td>
+                                    <td>{{ result.subject_assignment_marks|default:"-" }}</td>
+                                    <td>{{ selected_subject.exam_full_marks|default:80 }}</td>
+                                    <td>{{ result.subject_exam_marks|default:"-" }}</td>
+                                    <td>{{ result.total_marks|default:"-" }}</td>
+                                    <td>{{ result.grade|default:"-" }}</td>
+                                    <td>
+                                        {% if result.status == 'Pass' %}
+                                            <span class="badge badge-success">Pass</span>
+                                        {% else %}
+                                            <span class="badge badge-danger">Fail</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="9" class="text-center">No results found for this subject</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Print Preview Modal -->
+<div class="modal fade" id="printPreviewModal" tabindex="-1" role="dialog" aria-labelledby="printPreviewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="printPreviewModalLabel">Print Preview - {{ selected_subject.subject_name|default:"Results" }}</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="printPreviewContent">
+                <!-- Preview content will be inserted here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="confirmPrint">
+                    <i class="fas fa-print"></i> Print Now
+                </button>
+                <button type="button" class="btn btn-success" id="downloadPDF">
+                    <i class="fas fa-file-pdf"></i> Download PDF
+                </button>
+                <button type="button" class="btn btn-info" id="downloadExcel">
+                    <i class="fas fa-file-excel"></i> Download Excel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block custom_js %}
+<!-- Include required libraries -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<script>
+$(document).ready(function(){
+    // Search functionality
+    $("#searchInput").on("keyup", function() {
+        var value = $(this).val().toLowerCase();
+        $("#resultsTable tbody tr").filter(function() {
+            $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+        });
+    });
+
+    // Print button click handler
+    $('#printBtn').click(function() {
+        // Clone the table and add header information
+        var tableClone = $('#resultsTable').clone();
+        
+        // Add title and metadata to the preview
+        var title = '<div class="text-center mb-4">';
+        title += '<h3>{{ institution_name|default:"Student Management System" }}</h3>';
+        title += '<h4>{{ selected_subject.subject_name }} - Results</h4>';
+        title += '<p>Course: {{ selected_subject.course_id.course_name }}</p>';
+        title += '<p>Academic Year: {{ academic_year|default:"2023-2024" }}</p>';
+        title += '<p>Generated on: ' + new Date().toLocaleDateString() + '</p>';
+        title += '</div>';
+        
+        // Prepare preview content
+        $('#printPreviewContent').html(title + tableClone[0].outerHTML);
+        
+        // Show the preview modal
+        $('#printPreviewModal').modal('show');
+    });
+
+    // Confirm print button
+    $('#confirmPrint').click(function() {
+        $('#printPreviewModal').modal('hide');
+        setTimeout(function() {
+            var printContent = $('#printPreviewContent').html();
+            var originalContent = $('body').html();
+            
+            $('body').html('<div class="p-3">' + printContent + '</div>');
+            window.print();
+            $('body').html(originalContent);
+        }, 200);
+    });
+
+    // Download PDF button
+    $('#downloadPDF').click(function() {
+        const { jsPDF } = window.jspdf;
+        const element = document.getElementById('printPreviewContent');
+        
+        html2canvas(element).then(canvas => {
+            const doc = new jsPDF('p', 'mm', 'a4');
+            const imgData = canvas.toDataURL('image/png');
+            const imgWidth = doc.internal.pageSize.getWidth() - 20;
+            const pageHeight = doc.internal.pageSize.getHeight() - 20;
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+            
+            let heightLeft = imgHeight;
+            let position = 10;
+            
+            doc.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+            
+            while (heightLeft >= 0) {
+                position = heightLeft - imgHeight;
+                doc.addPage();
+                doc.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+            }
+            
+            doc.save('{{ selected_subject.subject_name|default:"results" }}_results.pdf');
+        });
+    });
+
+    // Download Excel button
+    $('#downloadExcel').click(function() {
+        // Get table data
+        const table = document.getElementById('resultsTable');
+        const workbook = XLSX.utils.table_to_book(table, {sheet: "Results"});
+        
+        // Generate Excel file
+        XLSX.writeFile(workbook, '{{ selected_subject.subject_name|default:"results" }}_results.xlsx', {
+            bookType: 'xlsx',
+            type: 'array'
+        });
+    });
+});
+</script>
+
+<style>
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    #printPreviewContent, #printPreviewContent * {
+        visibility: visible;
+    }
+    #printPreviewContent {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        padding: 20px;
+    }
+    .badge {
+        color: black !important;
+        background-color: transparent !important;
+        border: 1px solid black;
+        padding: 3px 6px;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    table, th, td {
+        border: 1px solid black;
+    }
+    th, td {
+        padding: 8px;
+        text-align: left;
+    }
+    thead {
+        background-color: #f2f2f2 !important;
+    }
+}
+</style>
+{% endblock %}

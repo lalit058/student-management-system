@@ -1,0 +1,53 @@
+{% extends 'staff_template/base_template.html' %}
+
+{% block main_content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card card-primary">
+                <div class="card-header">
+                    <h3 class="card-title">{{ subject.subject_name }} - Results</h3>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>Student Name</th>
+                                    <th>Internal Full Marks</th>
+                                    <th>Obtained Marks</th>
+                                    <th>Exam Full Marks</th>
+                                    <th>Obtained Marks</th>
+                                    <th>Total Marks</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for result in results %}
+                                <tr>
+                                    <td>{{ result.student_id.admin.first_name }} {{ result.student_id.admin.last_name }}</td>
+                                    
+                                    <td>{{ result.assignment_marks }}</td>
+                                    <td>{{ result.exam_marks }}</td>
+                                    <td>{{ result.total_marks }}</td>
+                                    <td>
+                                        {% if result.total_marks >= 40 %}
+                                            <span class="badge badge-success">Pass</span>
+                                        {% else %}
+                                            <span class="badge badge-danger">Fail</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <a href="{% url 'subject_wise_results' %}" class="btn btn-secondary">Back to Subjects</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

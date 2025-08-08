@@ -1,0 +1,336 @@
+{% extends 'hod_template/base_template.html' %}
+{% block page_title %}
+Manage Courses
+{% endblock page_title %}
+{% load static %}
+{% block main_content %}
+<section class="content">
+  <div class="container-fluid">
+    <!-- Message Display -->
+    <div class="row">
+      <div class="col-12">
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        {% endfor %}
+        {% endif %}
+      </div>
+    </div>
+    <!-- End Message Display -->
+
+    <div class="row">
+      <div class="col-12">
+        <div class="card card-primary card-outline">
+          <div class="card-header bg-gradient-navy">
+            <div class="d-flex justify-content-between align-items-center">
+              <h3 class="card-title text-white">
+                <i class="fas fa-book mr-2"></i>
+                Course Details
+              </h3>
+              <div>
+                <form method="GET" class="form-inline float-right">
+                  <div class="d-flex flex-wrap">
+                    <a href="{% url 'add_course' %}" class="btn btn-sm btn-success mr-2 mb-2 mb-md-0">
+                      <i class="fas fa-plus"></i> Add Course
+                    </a>
+                    <div class="input-group input-group-sm mr-2 mb-2 mb-md-0" style="width: 180px;">
+                      <select class="form-control" name="session" id="session-filter">
+                        <option value="">All Sessions</option>
+                        {% for session in sessions %}
+                        <option value="{{ session.id }}" 
+                        {% if request.GET.session == session.id|stringformat:'s' %}selected{% endif %}>
+                        {{ session.session_start_year }} - {{ session.session_end_year }}
+                        </option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                    <div class="input-group input-group-sm" style="width: 200px;">
+                      <input type="text" name="search" class="form-control" placeholder="Search courses..." value="{{ request.GET.search }}">
+                      <div class="input-group-append">
+                        <button type="submit" class="btn btn-light">
+                          <i class="fas fa-search"></i>
+                        </button>
+                        {% if request.GET.search or request.GET.session %}
+                        <a href="{% url 'manage_course' %}" class="btn btn-danger" title="Clear filters">
+                          <i class="fas fa-times"></i>
+                        </a>
+                        {% endif %}
+                      </div>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+          <!-- /.card-header -->
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover table-striped">
+                <thead class="bg-lightblue">
+                  <tr>
+                    <th>ID</th>
+                    <th>Course Name</th>
+                    <th>Session</th>
+                    <th>Students</th>
+                    <th>Created At</th>
+                    <th>Updated At</th>
+                    <th class="text-center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for course in courses %}
+                  <tr class="{% cycle 'bg-white' 'bg-gray-50' %}">
+                    <td class="align-middle font-weight-bold text-primary">#{{ course.id }}</td>
+                    <td class="align-middle font-weight-bold">{{ course.course_name }}</td>
+                    <td class="align-middle">
+                      <span class="badge badge-info">{{ course.session }}</span>
+                    </td>
+                    <td class="align-middle">
+                      <span class="badge badge-pill badge-primary">{{ course.students_set.count }}</span>
+                    </td>
+                    <td class="align-middle">
+                      <small class="text-muted">
+                        <i class="far fa-calendar-alt mr-1"></i> {{ course.created_at|date:"Y-m-d" }}
+                      </small>
+                    </td>
+                    <td class="align-middle">
+                      <small class="text-muted">
+                        <i class="far fa-clock mr-1"></i> {{ course.updated_at|date:"Y-m-d H:i" }}
+                      </small>
+                    </td>
+                    <td class="align-middle text-center">
+                      <div class="btn-group" role="group">
+                        <a href="{% url 'edit_course' course_id=course.id %}" class="btn btn-sm btn-outline-primary" title="Edit" data-toggle="tooltip">
+                          <i class="fas fa-edit"></i>
+                        </a>
+                        <button class="btn btn-sm btn-outline-danger" data-toggle="modal" data-target="#deleteModal{{ course.id }}" title="Delete" data-toggle="tooltip">
+                          <i class="fas fa-trash"></i>
+                        </button>
+                        <a href="{% url 'course_students_pdf' course_id=course.id %}" class="btn btn-sm btn-outline-info" title="Export PDF" data-toggle="tooltip">
+                          <i class="fas fa-file-pdf"></i>
+                        </a>
+                      </div>
+                    </td>
+                  </tr>
+
+                  <!-- Delete Modal for each course -->
+                  <div class="modal fade" id="deleteModal{{ course.id }}" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered" role="document">
+                      <div class="modal-content">
+                        <div class="modal-header bg-danger text-white">
+                          <h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
+                          <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                          </button>
+                        </div>
+                        <div class="modal-body">
+                          <div class="text-center mb-4">
+                            <i class="fas fa-book fa-4x text-danger mb-3"></i>
+                            <h5 class="mt-3">{{ course.course_name }}</h5>
+                            <p class="text-muted">{{ course.session }}</p>
+                            <div class="text-left mt-3">
+                              <p><strong>Students Enrolled:</strong> {{ course.students_set.count }}</p>
+                              <p><strong>Created:</strong> {{ course.created_at|date:"Y-m-d" }}</p>
+                            </div>
+                          </div>
+                          <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>
+                            <strong>Warning:</strong> This action cannot be undone. All associated data will be permanently deleted.
+                          </div>
+                          {% if course.students_set.exists %}
+                          <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-circle mr-2"></i>
+                            Note: This course has {{ course.students_set.count }} enrolled students
+                          </div>
+                          {% endif %}
+                        </div>
+                        <div class="modal-footer">
+                          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                          <form method="POST" action="{% url 'delete_course' course_id=course.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">
+                              <i class="fas fa-trash mr-1"></i> Delete Permanently
+                            </button>
+                          </form>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <!-- /.card-body -->
+          <div class="card-footer bg-white">
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="text-muted">
+                Showing <strong>{{ courses.start_index }}</strong> to <strong>{{ courses.end_index }}</strong> of
+                <strong>{{ courses.paginator.count }}</strong> courses
+              </div>
+              {% if courses.has_other_pages %}
+              <nav aria-label="Page navigation">
+                <ul class="pagination pagination-sm m-0">
+                  {% if courses.has_previous %}
+                  <li class="page-item">
+                    <a class="page-link" href="?page=1" aria-label="First">
+                      <span aria-hidden="true">&laquo;&laquo;</span>
+                    </a>
+                  </li>
+                  <li class="page-item">
+                    <a class="page-link" href="?page={{ courses.previous_page_number }}" aria-label="Previous">
+                      <span aria-hidden="true">&laquo;</span>
+                    </a>
+                  </li>
+                  {% endif %}
+
+                  {% for i in courses.paginator.page_range %}
+                  {% if courses.number == i %}
+                  <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+                  {% elif i > courses.number|add:'-3' and i < courses.number|add:'3' %} <li class="page-item"><a
+                      class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+                    {% endif %}
+                    {% endfor %}
+
+                    {% if courses.has_next %}
+                    <li class="page-item">
+                      <a class="page-link" href="?page={{ courses.next_page_number }}" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                      </a>
+                    </li>
+                    <li class="page-item">
+                      <a class="page-link" href="?page={{ courses.paginator.num_pages }}" aria-label="Last">
+                        <span aria-hidden="true">&raquo;&raquo;</span>
+                      </a>
+                    </li>
+                    {% endif %}
+                </ul>
+              </nav>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* Custom Styles */
+  .bg-gradient-navy {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%) !important;
+  }
+
+  .table-hover tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.05) !important;
+  }
+
+  .table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(0, 0, 0, 0.02);
+  }
+
+  .btn-group .btn {
+    margin-right: 5px;
+    border-radius: 4px !important;
+  }
+
+  .btn-group .btn:last-child {
+    margin-right: 0;
+  }
+
+  .modal-content {
+    border: none;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+  }
+
+  .modal-header {
+    border-bottom: none;
+  }
+
+  /* Responsive styles for header */
+  @media (max-width: 339px) {
+
+  html {
+    font-family: sans-serif !important;
+    line-height: 1.15;
+    -webkit-text-size-adjust: 33%;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    margin: 0;
+    font-family: "Source Sans Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol" !important;
+    font-size: 2rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #212529;
+    text-align: left;
+    background-color: #fff;
+}
+
+.card-title {
+    float: left !important;
+    font-size: 3.1rem;
+    font-weight: 400;
+    margin: 0;
+}
+
+    .card-header .d-flex {
+      flex-direction: column !important;
+    }
+    
+      .card-header .input-group {
+      margin-bottom: 8px !important;
+    }
+
+    .card-header .form-inline {
+      width: 100% !important;
+      margin-top: 10px;
+    }
+    
+    .card-header .d-flex.flex-wrap {
+      width: 76% !important;
+    }
+    
+    .card-header .input-group {
+      margin-bottom: 8px !important;
+    }
+    
+    .card-header .btn-success {
+      margin-bottom: 8px !important;
+      font-size: 35px;
+    }
+
+    .input-group-sm>.custom-select, .input-group-sm>.form-control, .input-group-sm>.input-group-append>.btn, .input-group-sm>.input-group-append>.input-group-text, .input-group-sm>.input-group-prepend>.btn, .input-group-sm>.input-group-prepend>.input-group-text {
+    padding: .25rem .5rem !important;
+    font-size: 1.875rem;
+    line-height: 1.5;
+    border-radius: .2rem;
+}
+  }
+  
+
+</style>
+
+<script>
+  $(document).ready(function () {
+    // Initialize tooltips
+    $('[data-toggle="tooltip"]').tooltip();
+
+    // Auto-submit form when session filter changes
+    $('#session-filter').change(function() {
+      $(this).closest('form').submit();
+    });
+    
+    // Auto-dismiss alerts after 5 seconds
+    setTimeout(function() {
+      $('.alert').alert('close');
+    }, 5000);
+  });
+</script>
+{% endblock %}

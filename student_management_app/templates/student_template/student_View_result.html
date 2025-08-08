@@ -1,0 +1,258 @@
+{% extends 'student_template/base_template.html' %}
+{% block page_title %}
+Result
+{% endblock page_title %}
+
+{% block main_content %}
+    <!-- Main content -->
+    <section class="content">
+      <div class="container-fluid">
+          <div class="row">
+              <div class="col-md-12">
+                  <!-- Printable Result Card -->
+                  <div class="card card-primary printable-area" id="resultCard" style="border: none; box-shadow: none;">
+                      <!-- University/School Header for Print -->
+                      <div class="print-only text-center" style="margin-bottom: 20px; display: none;">
+                          <h2 style="margin: 0; color: #2c3e50;">{{ institution_name|default:"UNIVERSITY NAME" }}</h2>
+                          <h3 style="margin: 5px 0; color: #3498db;">ACADEMIC RESULT</h3>
+                          <p style="margin: 0; font-size: 14px; color: #7f8c8d;">Session: {{ current_session|default:"2023-2024" }}</p>
+                      </div>
+                      
+                      <div class="card-body">
+                          <!-- Student Info Section -->
+                          <div class="student-info mb-4">
+                              <h4>Student Name: {{ student.admin.first_name }} {{ student.admin.last_name }}</h4>
+                              <p><strong>Student Roll Id:</strong> {{ student.roll_number }}</p>
+                              <p><strong>Student Class:</strong> {{ student.course_id.course_name }}</p>
+                          </div>
+                          
+                          <!-- Marks Table -->
+                          <div class="table-responsive">
+                              <table class="table table-bordered" id="resultTable">
+                                  <thead class="thead-light">
+                                      <tr>
+                                          <th>#</th>
+                                          <th>Subject</th>
+                                          <th>Internal (20)</th>
+                                          <th>Exam (80)</th>
+                                          <th>Total (100)</th>
+                                          <th>Grade</th>
+                                          <th>Status</th>
+                                      </tr>
+                                  </thead>
+                                  <tbody>
+                                      {% for row in studentresult %}
+                                      <tr>
+                                          <td>{{ forloop.counter }}</td>
+                                          <td>{{ row.subject_id.subject_name }}</td>
+                                          <td>{{ row.subject_assignment_marks }}</td>
+                                          <td>{{ row.subject_exam_marks }}</td>
+                                          <td>
+                                              {% with total=row.subject_assignment_marks|add:row.subject_exam_marks %}
+                                                  {{ total }}
+                                              {% endwith %}
+                                          </td>
+                                          <td>
+                                              {% with total=row.subject_assignment_marks|add:row.subject_exam_marks %}
+                                                  {% if total >= 90 %}A+
+                                                  {% elif total >= 80 %}A
+                                                  {% elif total >= 70 %}B+
+                                                  {% elif total >= 60 %}B
+                                                  {% elif total >= 50 %}C+
+                                                  {% elif total >= 40 %}C
+                                                  {% else %}F
+                                                  {% endif %}
+                                              {% endwith %}
+                                          </td>
+                                          <td>
+                                              {% with total=row.subject_assignment_marks|add:row.subject_exam_marks %}
+                                                  {% if total >= 40 %}
+                                                      <span class="badge badge-success">Pass</span>
+                                                  {% else %}
+                                                      <span class="badge badge-danger">Fail</span>
+                                                  {% endif %}
+                                              {% endwith %}
+                                          </td>
+                                      </tr>
+                                      {% endfor %}
+                                  </tbody>
+                              </table>
+                          </div>
+                          
+                          <!-- Summary Section -->
+                          <div class="result-summary mt-4">
+                              {% with pass_count=studentresult|length %}
+                                  <p><strong>Total Marks Obtained:</strong> {{ total_marks }} out of {{ max_marks }}</p>
+                                  <p><strong>Percentage:</strong> {{ percentage }}%</p>
+                                  <p><strong>Overall Grade:</strong>
+                                      {% if percentage >= 90 %}A+
+                                      {% elif percentage >= 80 %}A
+                                      {% elif percentage >= 70 %}B+
+                                      {% elif percentage >= 60 %}B
+                                      {% elif percentage >= 50 %}C+
+                                      {% elif percentage >= 40 %}C
+                                      {% else %}F
+                                      {% endif %}
+                                  </p>
+                                  <p><strong>Passed Subjects:</strong> {{ pass_count }} out of {{ studentresult|length }}</p>
+                                  <p><strong>Overall Status:</strong> 
+                                      {% if pass_count == studentresult|length %}
+                                          <span class="badge badge-success">Pass</span>
+                                      {% else %}
+                                          <span class="badge badge-danger">Fail</span>
+                                      {% endif %}
+                                  </p>
+                              {% endwith %}
+                          </div>
+                          
+                          <!-- Print Footer -->
+                          <div class="print-only" style="margin-top: 50px; display: none;">
+                              <div class="row">
+                                  <div class="col-md-6">
+                                      <p>Date: {% now "jS F Y" %}</p>
+                                      <p style="margin-top: 50px;">_________________________</p>
+                                      <p>Student's Signature</p>
+                                  </div>
+                                  <div class="col-md-6 text-right">
+                                      <p style="margin-top: 50px;">_________________________</p>
+                                      <p>Registrar's Signature</p>
+                                  </div>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+                  
+                  <!-- Action Buttons -->
+                  <div class="no-print mt-4">
+                      <button onclick="previewResult()" class="btn btn-info mr-2">
+                          <i class="fas fa-eye"></i> Preview Result
+                      </button>
+                      <button onclick="downloadResult()" class="btn btn-primary">
+                          <i class="fas fa-download"></i> Download Result
+                      </button>
+                      <button onclick="window.print()" class="btn btn-success ml-2">
+                          <i class="fas fa-print"></i> Print Result
+                      </button>
+                  </div>
+              </div>
+          </div>
+      </div>
+    </section>
+    <!-- /.content -->
+{% endblock main_content %}
+
+{% block custom_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+    @media print {
+        body * {
+            visibility: hidden;
+        }
+        .printable-area, .printable-area * {
+            visibility: visible;
+        }
+        .printable-area {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            margin: 0;
+            padding: 15px;
+        }
+        .no-print {
+            display: none !important;
+        }
+        .print-only {
+            display: block !important;
+        }
+        .card-header {
+            display: none;
+        }
+    }
+</style>
+<script>
+function prepareForPrint() {
+    // Show print-only elements
+    document.querySelectorAll('.print-only').forEach(el => {
+        el.style.display = 'block';
+    });
+    
+    // Hide non-print elements
+    document.querySelectorAll('.no-print').forEach(el => {
+        el.style.display = 'none';
+    });
+    
+    return document.getElementById('resultCard');
+}
+
+function resetAfterPrint() {
+    // Hide print-only elements
+    document.querySelectorAll('.print-only').forEach(el => {
+        el.style.display = 'none';
+    });
+    
+    // Show non-print elements
+    document.querySelectorAll('.no-print').forEach(el => {
+        el.style.display = '';
+    });
+}
+
+function previewResult() {
+    const element = prepareForPrint();
+    const opt = {
+        margin: [10, 10, 10, 10],
+        filename: '{{ student.admin.first_name }}_{{ student.admin.last_name }}_Result.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { 
+            scale: 2,
+            logging: true,
+            useCORS: true,
+            letterRendering: true,
+            scrollX: 0,
+            scrollY: 0
+        },
+        jsPDF: { 
+            unit: 'mm', 
+            format: 'a4', 
+            orientation: 'portrait'
+        }
+    };
+    
+    // Create PDF and open in new tab for preview
+    html2pdf().set(opt).from(element).toPdf().get('pdf').then(function(pdf) {
+        resetAfterPrint();
+        window.open(pdf.output('bloburl'), '_blank');
+    });
+}
+
+function downloadResult() {
+    const element = prepareForPrint();
+    const opt = {
+        margin: [10, 10, 10, 10],
+        filename: '{{ student.admin.first_name }}_{{ student.admin.last_name }}_Result.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { 
+            scale: 2,
+            logging: true,
+            useCORS: true,
+            letterRendering: true,
+            scrollX: 0,
+            scrollY: 0
+        },
+        jsPDF: { 
+            unit: 'mm', 
+            format: 'a4', 
+            orientation: 'portrait'
+        }
+    };
+    
+    // Generate and download PDF
+    html2pdf().set(opt).from(element).save().then(() => {
+        resetAfterPrint();
+    });
+}
+
+// Handle browser print
+window.addEventListener('afterprint', resetAfterPrint);
+</script>
+{% endblock %}

@@ -1,0 +1,111 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Student Records</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 10mm;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 12px;
+            table-layout: fixed;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+            word-wrap: break-word;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 10px;
+            color: #666;
+        }
+        .preview-actions {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .download-btn {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 4px;
+            display: inline-block;
+        }
+        .email-col {
+            width: 20%;
+        }
+        .phone-col {
+            width: 12%;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Student Records</h1>
+        <h2>COURSE: {{ course_filter.course_name }}</h2>
+        <p>Printed on: {% now "F j, Y H:i" %}</p>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Username</th>
+                <th class="email-col">Email</th>
+                <th class="phone-col">Phone</th>
+                <th>Course</th>
+                <th>Session</th>
+                <th>Gender</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for student in students %}
+            <tr>
+                <td>{{ student.admin.id }}</td>
+                <td>{{ student.admin.first_name }} {{ student.admin.last_name }}</td>
+                <td>{{ student.admin.username }}</td>
+                <td class="email-col">{{ student.admin.email }}</td>
+                <td class="phone-col">{{ student.phone_number|default:"-" }}</td>
+                <td>{{ student.course_id.course_name }}</td>
+                <td>{{ student.session_year_id.session_start_year|date:"Y" }} - {{ student.session_year_id.session_end_year|date:"Y" }}</td>
+                <td>{{ student.gender }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="footer">
+        <p>© {% now "Y" %} School Management System</p>
+    </div>
+
+    {% if preview %}
+    <div class="preview-actions">
+        <a href="?download=1" class="download-btn">Download PDF</a>
+    </div>
+    {% endif %}
+</body>
+</html>

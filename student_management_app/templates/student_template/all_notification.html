@@ -1,0 +1,176 @@
+{% extends 'student_template/base_template.html' %}
+{% block page_title %}
+Student Notifications
+{% endblock page_title %}
+{% block main_content %}
+    <!-- Main content -->
+    <section class="content">
+      <div class="container-fluid">
+           <div class="row">
+          <div class="col-12">
+            <div class="card card-primary card-outline">
+              <div class="card-header bg-gradient-navy">
+                <h3 class="card-title text-white">
+                  <i class="fas fa-bell mr-2"></i>
+                  Notifications
+                </h3>
+                <div class="card-tools">
+                  <div class="input-group input-group-sm" style="width: 200px;">
+                    <input type="text" id="notificationSearch" class="form-control float-right" placeholder="Search notifications...">
+                    <div class="input-group-append">
+                      <button type="button" class="btn btn-default" onclick="searchNotifications()">
+                        <i class="fas fa-search"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- /.card-header -->
+              <div class="card-body p-0">
+                <div class="table-responsive">
+                  <table class="table table-hover table-striped">
+                    <thead class="bg-lightblue">
+                      <tr>
+                        <th>ID</th>
+                        <th>Sender</th>
+                        <th>Notification</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                    {% for notification in notifications %}
+                      <tr class="{% cycle 'bg-white' 'bg-gray-50' %}">
+                        <td class="align-middle font-weight-bold text-primary">#{{ notification.id }}</td>
+                        <td class="align-middle">
+                          {% if notification.admin_id %}
+                            <span class="badge badge-primary">Admin</span>
+                          {% elif notification.staff_id %}
+                            <span class="badge badge-info">Staff</span>
+                          {% else %}
+                            <span class="badge badge-secondary">System</span>
+                          {% endif %}
+                        </td>
+                        <td class="align-middle">{{ notification.message }}</td>
+                        <td class="align-middle">{{ notification.created_at|date:"d M Y H:i" }}</td>
+                        <td class="align-middle">
+                          {% if notification.read_status or notification.is_read %}
+                            <span class="badge badge-success">Read</span>
+                          {% else %}
+                            <span class="badge badge-warning">Unread</span>
+                          {% endif %}
+                        </td>
+                      </tr>
+                    {% empty %}
+                      <tr>
+                        <td colspan="5" class="text-center py-4">No notifications found</td>
+                      </tr>
+                    {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <!-- /.card-body -->
+            </div>
+            <!-- /.card -->
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- /.content -->
+
+<style>
+  /* Match the parent template styling */
+  .bg-gradient-navy {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%) !important;
+  }
+  
+  .bg-lightblue {
+    background-color: #3c8dbc !important;
+    color: white;
+  }
+  
+  .table-hover tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.05) !important;
+  }
+  
+  .table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(0, 0, 0, 0.02);
+  }
+  
+  .badge-primary {
+    background-color: #3c8dbc;
+  }
+  
+  .badge-success {
+    background-color: #00a65a;
+  }
+  
+  .badge-warning {
+    background-color: #f39c12;
+  }
+  
+  .badge-info {
+    background-color: #00c0ef;
+  }
+  
+  .badge-secondary {
+    background-color: #6c757d;
+  }
+</style>
+
+<!-- Add this script at the bottom of your template -->
+<script>
+// Mark notifications as read when page loads
+$(document).ready(function() {
+    // Update unread count in sidebar
+    function updateNotificationCount() {
+        $.ajax({
+            url: "{% url 'mark_student_notifications_as_read' %}",
+            type: "POST",
+            data: {
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+            success: function(response) {
+                if(response.status === 'success') {
+                    $('.notification-badge').remove(); // Remove badge after marking as read
+                }
+            }
+        });
+    }
+    
+    updateNotificationCount();
+    
+    // Search functionality
+    function searchNotifications() {
+        let input = document.getElementById("notificationSearch");
+        let filter = input.value.toLowerCase();
+        let table = document.querySelector(".table");
+        let tr = table.getElementsByTagName("tr");
+        
+        for (let i = 1; i < tr.length; i++) {
+            let found = false;
+            const td = tr[i].getElementsByTagName("td");
+            
+            for (let j = 0; j < td.length; j++) {
+                if (td[j]) {
+                    if (td[j].innerHTML.toLowerCase().indexOf(filter) > -1) {
+                        found = true;
+                        break;
+                    }
+                }
+            }
+            
+            if (found) {
+                tr[i].style.display = "";
+            } else {
+                tr[i].style.display = "none";
+            }
+        }
+    }
+    
+    // Make search function available globally
+    window.searchNotifications = searchNotifications;
+});
+</script>
+{% endblock main_content %}

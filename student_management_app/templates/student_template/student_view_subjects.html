@@ -1,0 +1,115 @@
+{% extends 'student_template/base_template.html' %}
+{% block page_title %}
+My Subjects
+{% endblock page_title %}
+{% load static %}
+{% block main_content %}
+<!-- Main content -->
+<section class="content">
+  <div class="container-fluid">
+    <!-- Message Display -->
+    <div class="row">
+      <div class="col-12">
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        {% endfor %}
+        {% endif %}
+      </div>
+    </div>
+    <!-- End Message Display -->
+
+    <div class="row">
+      <div class="col-12">
+        <div class="card card-primary card-outline">
+          <div class="card-header bg-gradient-navy">
+            <h3 class="card-title text-white">
+              <i class="fas fa-book mr-2"></i>
+              My Subjects
+            </h3>
+            <div class="card-tools">
+              <form method="GET" action="{% url 'student_view_subjects' %}" class="form-inline">
+                <div class="input-group input-group-sm" style="width: 250px;">
+                  <input type="text" name="search" class="form-control" placeholder="Search subjects..." 
+                         value="{{ request.GET.search }}">
+                  <div class="input-group-append">
+                    <button type="submit" class="btn btn-light">
+                      <i class="fas fa-search"></i>
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+          <!-- /.card-header -->
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover table-striped">
+                <thead class="bg-lightblue">
+                  <tr>
+                    <th>Subject ID</th>
+                    <th>Subject Name</th>
+                    <th>Course</th>
+                    <th>Teacher</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for subject in subjects %}
+                  <tr>
+                    <td class="font-weight-bold text-primary">#{{ subject.id }}</td>
+                    <td class="font-weight-bold">{{ subject.subject_name }}</td>
+                    <td>{{ subject.course_id.course_name }}</td>
+                    <td>
+  {% if subject.admin.staff_id %}
+  <div class="d-flex flex-column">
+    <span>{{ subject.admin.staff_id.first_name }} {{ subject.admin.staff_id.last_name }}</span>
+    <span class="text-muted small">{{ subject.staff_id.admin.email }}</span>
+  </div>
+  {% else %}
+  <span class="text-danger">Not assigned</span>
+  {% endif %}
+</td>
+                  </tr>
+                  {% empty %}
+                  <tr>
+                    <td colspan="4" class="text-center">No subjects found for your course</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <!-- /.card-body -->
+          <div class="card-footer bg-white">
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="text-muted">
+                Showing <strong>{{ subjects|length }}</strong> subjects
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* Custom Styles */
+  .bg-gradient-navy {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%) !important;
+  }
+
+  .table-hover tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.05) !important;
+  }
+
+  .table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(0, 0, 0, 0.02);
+  }
+</style>
+{% endblock main_content %}

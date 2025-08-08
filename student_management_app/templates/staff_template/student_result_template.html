@@ -1,0 +1,59 @@
+{% extends 'staff_template/base_template.html' %}
+{% block page_title %}
+Results for {{ student.admin.first_name }} in {{ subject.subject_name }}
+{% endblock %}
+{% block main_content %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-6 offset-md-3">
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">Student Results</h3>
+                        <div class="card-tools">
+                            <a href="{% url 'subject_students' subject.id %}" class="btn btn-tool">
+                                <i class="fas fa-arrow-left"></i> Back to Students
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        {% if has_result %}
+                            <div class="form-group">
+                                <label>Student Name:</label>
+                                <p>{{ student.admin.get_full_name }}</p>
+                            </div>
+                            <div class="form-group">
+                                <label>Subject:</label>
+                                <p>{{ subject.subject_name }}</p>
+                            </div>
+                            <div class="form-group">
+                                <label>Assignment Marks:</label>
+                                <p>{{ result.subject_assignment_marks }}</p>
+                            </div>
+                            <div class="form-group">
+                                <label>Exam Marks:</label>
+                                <p>{{ result.subject_exam_marks }}</p>
+                            </div>
+                            <div class="form-group">
+                                <label>Total Marks:</label>
+                                <p>{{ result.get_total_marks }}</p>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-warning text-center">
+                                <i class="icon fas fa-exclamation-triangle"></i>
+                                Results not yet assigned for this student.
+                                <div class="mt-2">
+                                    <a href="{% url 'staff_add_result' %}?student_id={{ student.admin.id }}&subject_id={{ subject.id }}" 
+                                       class="btn btn-primary">
+                                        <i class="fas fa-plus"></i> Add Result Now
+                                    </a>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,525 @@
+{% extends 'hod_template/base_template.html' %}
+{% block page_title %}
+Add Parent
+{% endblock page_title %}
+{% block main_content %}
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <!-- general form elements -->
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">Add Parent</h3>
+                    </div>
+                    <!-- /.card-header -->
+                    <!-- form start -->
+                    <form role="form" action="{% url 'add_parent_save' %}" method="post" enctype="multipart/form-data"
+                        id="parentForm" novalidate>
+                        {% csrf_token %}
+                        <div class="card-body">
+                            <!-- Message Display -->
+                            {% if messages %}
+                            <div class="col-12">
+                                {% for message in messages %}
+                                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                    {{ message }}
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+
+                            <div class="form-group">
+                                <label>First Name</label>
+                                <input type="text" class="form-control" name="first_name" placeholder="First Name"
+                                    required>
+                            </div>
+                            <div class="form-group">
+                                <label>Last Name</label>
+                                <input type="text" class="form-control" name="last_name" placeholder="Last Name"
+                                    required>
+                            </div>
+                            <div class="form-group">
+                                <label>Username</label>
+                                <input type="text" class="form-control" name="username" placeholder="Username" required="True"
+                                    hx-get="{% url 'check_parent_username' %}" hx-trigger="keyup changed delay:500ms"
+                                    hx-target="#username-error">
+                                <div id="username-error" class="validation-message small">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Email address</label>
+                                <input type="email" class="form-control" name="email" placeholder="Email" required
+                                    hx-get="{% url 'check_parent_email' %}" hx-trigger="keyup changed delay:500ms"
+                                    hx-target="#email-error">
+                                <div id="email-error" class="validation-message small"></div>
+                            </div>
+                            <div class="form-group">
+                                <label>Phone Number</label>
+                                <input type="tel" class="form-control" name="phone_number" placeholder="98XXXXXXXX"
+                                    pattern="[0-9]{10}" required hx-get="{% url 'check_parent_phone' %}"
+                                    hx-trigger="keyup changed delay:500ms" hx-target="#phone-error">
+                                <div id="phone-error" class="validation-message small"></div>
+                            </div>
+                            <div class="form-group">
+                                <label>Address</label>
+                                <textarea class="form-control" name="address" rows="1" required></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Relationship to Student</label>
+                                <select class="form-control" name="relationship" required>
+                                    <option value="">Select Relationship</option>
+                                    <option value="Father">Father</option>
+                                    <option value="Mother">Mother</option>
+                                    <option value="Guardian">Guardian</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Select Student</label>
+                                <select class="form-control select2" name="student_id" required>
+                                    <option value="">Select Student</option>
+                                    {% for student in students %}
+                                    <option value="{{ student.id }}">
+                                        {{ student.admin.first_name }} {{ student.admin.last_name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Profile Picture</label>
+                                <div class="custom-file">
+                                    <input type="file" class="custom-file-input" id="profile_pic" name="profile_pic"
+                                        accept="image/*">
+                                    <label class="custom-file-label" for="profile_pic">Choose file</label>
+                                </div>
+                            </div>
+                            <div class="form-group" style="position: relative;">
+                                <label>Password</label>
+                                <div style="position: relative;">
+                                    <input type="password" class="form-control" name="password" placeholder="Password"
+                                        required minlength="8">
+                                    <button class="toggle-password" type="button" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+                                                   background: none; border: none; cursor: pointer; padding: 0; outline: none;
+                                                   z-index: 2; display: none;">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <div id="password-strength" class="validation-message small"></div>
+                            </div>
+                        </div>
+                        <!-- /.card-body -->
+
+                        <div class="card-footer">
+                            <button type="submit" class="btn btn-primary btn-block">Add Parent</button>
+                        </div>
+                    </form>
+                </div>
+                <!-- /.card -->
+            </div>
+        </div>
+    </div>
+</section>
+<!-- /.content -->
+{% endblock main_content %}
+
+{% block custom_js %}
+<!-- Add Font Awesome for eye icon -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<script src="https://unpkg.com/htmx.org@1.9.6"></script>
+<script>
+    // Enhanced validation functions
+    function validateUsername(input) {
+        const username = input.value;
+        const isValidFormat = /^[a-zA-Z0-9_]{4,20}$/.test(username);
+
+        updateValidationUI(input, isValidFormat,
+            isValidFormat ? "✓ Username format valid" : "✗ 4-20 chars (letters, numbers, _)");
+    }
+
+    function validatePassword(input) {
+        const password = input.value;
+        const requirements = {
+            length: password.length >= 8,
+            upper: /[A-Z]/.test(password),
+            lower: /[a-z]/.test(password),
+            number: /[0-9]/.test(password),
+            special: /[@$!%*?&]/.test(password)
+        };
+
+        const isValid = Object.values(requirements).every(Boolean);
+
+        // Show/hide toggle button
+        const toggleBtn = document.querySelector('.toggle-password');
+        if (toggleBtn) {
+            toggleBtn.style.display = password.length > 0 ? 'block' : 'none';
+        }
+
+        // Create validation message
+        let message = '<div class="password-requirements"><strong>Password Requirements:</strong><ul>';
+        message += requirements.length ? '<li class="text-success">✓ At least 8 characters</li>' : '<li class="text-danger">✗ At least 8 characters</li>';
+        message += requirements.upper ? '<li class="text-success">✓ Uppercase letter</li>' : '<li class="text-danger">✗ Uppercase letter</li>';
+        message += requirements.lower ? '<li class="text-success">✓ Lowercase letter</li>' : '<li class="text-danger">✗ Lowercase letter</li>';
+        message += requirements.number ? '<li class="text-success">✓ Number</li>' : '<li class="text-danger">✗ Number</li>';
+        message += requirements.special ? '<li class="text-success">✓ Special character (@$!%*?&)</li>' : '<li class="text-danger">✗ Special character (@$!%*?&)</li>';
+        message += '</ul>';
+
+        // Show example when password has content or field is focused
+        if (password.length > 0 || document.activeElement === input) {
+            message += '<small class="text-muted">Example: Secure@123!</small>';
+        }
+        message += '</div>';
+
+        // Update UI
+        const errorElement = document.getElementById('password-strength');
+        if (errorElement) {
+            errorElement.innerHTML = message;
+            errorElement.className = `validation-message small ${isValid ? 'text-success' : 'text-danger'}`;
+        }
+
+        input.classList.toggle('is-valid', isValid);
+        input.classList.toggle('is-invalid', !isValid);
+        return isValid;
+    }
+
+    function validatePhone(input) {
+        const phone = input.value;
+        const isValidFormat = /^[0-9]{10}$/.test(phone);
+
+        updateValidationUI(input, isValidFormat,
+            isValidFormat ? "✓ Phone format valid" : "✗ 10 digits only");
+    }
+
+    function validateEmail(input) {
+        const email = input.value;
+        const isValidFormat = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+        updateValidationUI(input, isValidFormat,
+            isValidFormat ? "✓ Email format valid" : "✗ Enter a valid email address");
+    }
+
+    function updateValidationUI(input, isValid, message) {
+        const fieldName = input.name;
+        const errorElement = document.getElementById(`${fieldName}-error`);
+
+        if (errorElement) {
+            errorElement.textContent = message;
+            errorElement.className = `validation-message small ${isValid ? 'text-success' : 'text-danger'}`;
+        }
+
+        input.classList.toggle('is-valid', isValid);
+        input.classList.toggle('is-invalid', !isValid);
+    }
+
+    // Initialize event listeners
+    document.addEventListener('DOMContentLoaded', function () {
+        // Password toggle functionality
+        const passwordInput = document.querySelector('[name="password"]');
+        const toggleBtn = document.querySelector('.toggle-password');
+
+        if (passwordInput && toggleBtn) {
+            toggleBtn.addEventListener('click', function () {
+                if (passwordInput.type === 'password') {
+                    passwordInput.type = 'text';
+                    this.innerHTML = '<i class="fas fa-eye-slash"></i>';
+                } else {
+                    passwordInput.type = 'password';
+                    this.innerHTML = '<i class="fas fa-eye"></i>';
+                }
+            });
+
+            passwordInput.addEventListener('input', function () {
+                toggleBtn.style.display = this.value.length > 0 ? 'block' : 'none';
+                validatePassword(this);
+            });
+
+            passwordInput.addEventListener('focus', function () {
+                validatePassword(this);
+            });
+        }
+
+        // Validation listeners
+        document.querySelector('[name="username"]')?.addEventListener('input', function () {
+            validateUsername(this);
+        });
+
+        document.querySelector('[name="password"]')?.addEventListener('input', function () {
+            validatePassword(this);
+        });
+
+        document.querySelector('[name="phone_number"]')?.addEventListener('input', function () {
+            validatePhone(this);
+        });
+
+        document.querySelector('[name="email"]')?.addEventListener('input', function () {
+            validateEmail(this);
+        });
+
+        // Initialize validation for any pre-filled fields
+        document.querySelectorAll('[name="username"], [name="password"], [name="phone_number"], [name="email"]').forEach(input => {
+            if (input.value.length > 0) {
+                const validator = {
+                    'username': validateUsername,
+                    'password': validatePassword,
+                    'phone_number': validatePhone,
+                    'email': validateEmail
+                }[input.name];
+
+                if (validator) validator(input);
+            }
+        });
+    });
+
+    // Handle HTMX responses
+    document.body.addEventListener('htmx:afterRequest', function (evt) {
+        const input = evt.detail.elt;
+        const response = evt.detail.xhr.response;
+
+        try {
+            const data = JSON.parse(response);
+
+            if (input.name === 'username' && data.is_taken !== undefined) {
+                const errorElement = document.getElementById('username-error');
+                if (errorElement) {
+                    const isValidFormat = /^[a-zA-Z0-9_]{4,20}$/.test(input.value);
+                    if (data.is_taken) {
+                        errorElement.textContent = "✗ Username already taken";
+                        errorElement.className = 'validation-message small text-danger';
+                        input.classList.add('is-invalid');
+                        input.classList.remove('is-valid');
+                    } else if (isValidFormat) {
+                        errorElement.textContent = "✓ Username available";
+                        errorElement.className = 'validation-message small text-success';
+                        input.classList.remove('is-invalid');
+                        input.classList.add('is-valid');
+                    }
+                }
+            }
+
+            if (input.name === 'phone_number' && data.is_taken !== undefined) {
+                const errorElement = document.getElementById('phone-error');
+                if (errorElement) {
+                    errorElement.textContent = data.is_taken ?
+                        "✗ Phone already registered" : "✓ Phone available";
+                    errorElement.className = `validation-message small ${data.is_taken ? 'text-danger' : 'text-success'}`;
+                    input.classList.toggle('is-invalid', data.is_taken);
+                    input.classList.toggle('is-valid', !data.is_taken);
+                }
+            }
+
+            if (input.name === 'email' && data.is_taken !== undefined) {
+                const errorElement = document.getElementById('email-error');
+                if (errorElement) {
+                    errorElement.textContent = data.is_taken ?
+                        "✗ Email already registered" : "✓ Email available";
+                    errorElement.className = `validation-message small ${data.is_taken ? 'text-danger' : 'text-success'}`;
+                    input.classList.toggle('is-invalid', data.is_taken);
+                    input.classList.toggle('is-valid', !data.is_taken);
+                }
+            }
+        } catch (e) {
+            console.error("Error parsing HTMX response", e);
+        }
+    });
+</script>
+
+<style>
+    /* Disable browser default validation markers */
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover,
+    input:-webkit-autofill:focus,
+    input:-webkit-autofill:active {
+        -webkit-box-shadow: 0 0 0 30px white inset !important;
+    }
+
+    input::-webkit-contacts-auto-fill-button,
+    input::-webkit-credentials-auto-fill-button {
+        visibility: hidden;
+        pointer-events: none;
+        position: absolute;
+        right: 0;
+    }
+
+    input::-webkit-caps-lock-indicator,
+    input::-webkit-credentials-auto-fill-button,
+    input::-webkit-clear-button,
+    input::-webkit-inner-spin-button,
+    input::-webkit-outer-spin-button,
+    input::-webkit-search-cancel-button,
+    input::-webkit-search-decoration,
+    input::-webkit-search-results-button,
+    input::-webkit-search-results-decoration {
+        display: none;
+    }
+
+    /* Password field and toggle button styles */
+    input[type="password"] {
+        padding-right: 35px;
+        /* Make space for the eye icon */
+        width: 100%;
+        -webkit-appearance: none;
+        /* Remove default styling */
+    }
+
+    .toggle-password {
+        opacity: 0.6;
+        transition: opacity 0.2s;
+        z-index: 2;
+        /* Ensure it stays above other elements */
+        display: none;
+        /* Hidden by default */
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0;
+        outline: none;
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+
+    .toggle-password:hover {
+        opacity: 1;
+    }
+
+    /* Validation message styling */
+    .validation-message {
+        font-size: 0.875em;
+        margin-top: 0.25rem;
+        line-height: 1.4;
+        list-style-type: none;
+        padding-left: 0;
+    }
+
+    .text-success {
+        color: #28a745;
+    }
+
+    .text-danger {
+        color: #dc3545;
+    }
+
+    /* Form field styling */
+    .is-valid {
+        border-color: #28a745 !important;
+    }
+
+    .is-invalid {
+        border-color: #dc3545 !important;
+        background-image: none !important;
+        /* Remove default invalid icon */
+    }
+
+    /* Remove focus outline from toggle button */
+    .toggle-password:focus {
+        outline: none;
+        box-shadow: none;
+    }
+
+    #password-strength ul {
+        padding-left: 1.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    #password-strength li {
+        margin-bottom: 0.25rem;
+        list-style-type: none;
+    }
+
+    .text-muted {
+        color: #6c757d;
+        font-style: italic;
+    }
+
+    #password-strength {
+        margin-top: 5px;
+    }
+
+    /* Password requirements styling */
+    .password-requirements {
+        background: #f8f9fa;
+        padding: 10px;
+        border-radius: 4px;
+        margin-top: 5px;
+    }
+
+    .password-requirements.text-success {
+        border-left-color: #28a745;
+    }
+
+    .password-requirements.text-danger {
+        border-left-color: #dc3545;
+    }
+
+    .password-requirements ul {
+        padding-left: 20px;
+        margin: 5px 0;
+    }
+
+    .password-requirements li {
+        list-style-type: none;
+        margin-bottom: 3px;
+    }
+
+    .password-requirements small.text-muted {
+        display: block !important;
+        margin-top: 8px;
+        color: #6c757d !important;
+        font-style: italic;
+    }
+
+    /* Hide all JSON output */
+    #password-strength pre,
+    #password-strength+pre {
+        display: none !important;
+    }
+
+    /* Remove browser validation icons */
+    input.is-valid {
+        background-image: none !important;
+        padding-right: 35px !important;
+    }
+
+    input[type="password"] {
+        padding-right: 35px !important;
+    }
+
+    /* Validation message styling */
+    .validation-message {
+        font-size: 0.875em;
+        margin-top: 0.25rem;
+    }
+
+    .text-success {
+        color: #28a745;
+    }
+
+    .text-danger {
+        color: #dc3545;
+    }
+
+    /* Form field styling */
+    .is-valid {
+        border-color: #28a745 !important;
+    }
+
+    .is-invalid {
+        border-color: #dc3545 !important;
+    }
+
+    /* Password toggle button styling */
+    .toggle-password {
+        opacity: 0.6;
+        transition: opacity 0.2s;
+    }
+
+    .toggle-password:hover {
+        opacity: 1;
+    }
+</style>
+{% endblock custom_js %}

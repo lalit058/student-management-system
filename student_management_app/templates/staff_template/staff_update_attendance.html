@@ -1,0 +1,301 @@
+{% extends 'staff_template/base_template.html' %}
+{% block page_title %}Update Attendance{% endblock %}
+{% block main_content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card card-primary">
+                <div class="card-header">
+                    <h3 class="card-title">Update Attendance</h3>
+                </div>
+
+                <div class="card-body">
+                    <div id="message_box"></div>
+
+                    <div class="form-group">
+                        <label>Subject</label>
+                        <select class="form-control" id="subject">
+                            <option value="">Select Subject</option>
+                            {% for subject in subjects %}
+                            <option value="{{ subject.id }}">{{ subject.subject_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Session Year</label>
+                        <select class="form-control" id="session_year">
+                            <option value="">Select Session Year</option>
+                            {% for session in session_years %}
+                            <option value="{{ session.id }}">
+                                {{ session.session_start_year }} - {{ session.session_end_year }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <button id="fetch_attendance_dates" class="btn btn-primary">Get Attendance Dates</button>
+
+                    <div id="attendance_dates_container" class="mt-3" style="display:none">
+                        <div class="form-group">
+                            <label>Attendance Date</label>
+                            <select class="form-control" id="attendance_date">
+                                <!-- Dates will be populated via AJAX -->
+                            </select>
+                        </div>
+                        <button id="fetch_students_for_date" class="btn btn-info">Get Students for Date</button>
+                    </div>
+
+                    <div id="students_container" class="mt-3" style="display:none">
+                        <h4>Update Attendance</h4>
+                        <div id="students_list"></div>
+                        <button id="save_updated_attendance" class="btn btn-success mt-2">Save Changes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block custom_js %}
+<script>
+    $(document).ready(function () {
+        // Fetch attendance dates when button clicked
+        $("#fetch_attendance_dates").click(function () {
+            const subject = $("#subject").val();
+            const session_year = $("#session_year").val();
+
+            if (!subject || !session_year) {
+                show_message("Please select both subject and session year", "danger");
+                return;
+            }
+
+            $.ajax({
+                url: "{% url 'get_attendance_dates' %}",
+                type: "POST",
+                data: {
+                    subject: subject,
+                    session_year_id: session_year,
+                    csrfmiddlewaretoken: "{{ csrf_token }}"
+                },
+                success: function (response) {
+                    try {
+                        const dates = JSON.parse(response);
+                        if (dates.length === 0) {
+                            show_message("No attendance records found", "warning");
+                            return;
+                        }
+
+                        let html = '<option value="">Select Date</option>';
+                        dates.forEach(function (date) {
+                            // Format the date for better display
+                            const dateObj = new Date(date.attendance_date);
+                            const formattedDate = dateObj.toLocaleDateString() + ' ' + dateObj.toLocaleTimeString();
+                            html += `<option value="${date.id}">${formattedDate}</option>`;
+                        });
+
+                        $("#attendance_date").html(html);
+                        $("#attendance_dates_container").show();
+                        show_message(`Found ${dates.length} attendance dates`, "success");
+                    } catch (e) {
+                        show_message("Error parsing attendance dates", "danger");
+                    }
+                },
+                error: function () {
+                    show_message("Error fetching attendance dates", "danger");
+                }
+            });
+        });
+
+        // Fetch students for selected date
+        $("#fetch_students_for_date").click(function () {
+            const attendance_date = $("#attendance_date").val();
+
+            if (!attendance_date) {
+                show_message("Please select an attendance date", "danger");
+                return;
+            }
+
+            // Show loading state
+            const $btn = $(this);
+            $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Loading...');
+
+            $.ajax({
+                url: "{% url 'get_attendance_student' %}",
+                type: "POST",
+                data: {
+                    attendance_date: attendance_date,
+                    csrfmiddlewaretoken: "{{ csrf_token }}"
+                },
+                success: function (response) {
+                    try {
+                        // Handle case where error message is returned
+                        if (response.error) {
+                            show_message(response.error, "danger");
+                            return;
+                        }
+                        
+                        if (response.length === 0) {
+                            show_message("No students found for this date", "warning");
+                            return;
+                        }
+
+                        let html = `
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Current Status</th>
+                                    <th>Update Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>`;
+
+                        response.forEach(function (student) {
+                            html += `
+                            <tr>
+                                <td>${student.name || 'Unknown Student'}</td>
+                                <td>${student.status ? 'Present' : 'Absent'}</td>
+                                <td>
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input status_checkbox" 
+                                               id="update_status_${student.id}" 
+                                               data-student-id="${student.id}"
+                                               ${student.status ? 'checked' : ''}>
+                                        <label class="form-check-label" for="update_status_${student.id}">
+                                            Mark Present
+                                        </label>
+                                    </div>
+                                </td>
+                            </tr>`;
+                        });
+
+                        html += `</tbody></table>`;
+                        $("#students_list").html(html);
+                        $("#students_container").show();
+                        show_message(`Found ${response.length} attendance records`, "success");
+                    } catch (e) {
+                        console.error("Error processing response:", e, "Response:", response);
+                        show_message("Error processing student data: " + e.message, "danger");
+                    }
+                },
+                error: function (xhr, status, error) {
+                    let errorMsg = "Error fetching student attendance";
+                    try {
+                        // Try to parse the error response
+                        const response = JSON.parse(xhr.responseText);
+                        errorMsg = response.error || errorMsg;
+                        
+                        // More detailed error logging
+                        console.error("Server error details:", {
+                            status: xhr.status,
+                            response: response,
+                            error: error
+                        });
+                        
+                        // Special handling for common errors
+                        if (xhr.status === 404) {
+                            errorMsg = "Attendance data not found";
+                        } else if (xhr.status === 400) {
+                            errorMsg = "Invalid request: " + (response.error || "");
+                        } else if (xhr.status === 500) {
+                            errorMsg = "Server error: " + (response.error || "Please try again later");
+                        }
+                    } catch(e) {
+                        console.error("Failed to parse error response:", e);
+                        errorMsg = `Network error (${xhr.statusText || "Unknown error"})`;
+                    }
+                    
+                    show_message(`${errorMsg} (Status: ${xhr.status})`, "danger");
+                    
+                    // Additional error handling
+                    if (xhr.status === 0) {
+                        console.error("Possible network connectivity issue");
+                        show_message("Cannot connect to server. Please check your network connection.", "danger");
+                    }
+                },
+                complete: function () {
+                    $btn.prop('disabled', false).html('Get Students for Date');
+                }
+            });
+        });
+
+
+        // Save updated attendance
+        $("#save_updated_attendance").click(function () {
+            const attendance_date = $("#attendance_date").val();
+            const student_status = [];
+
+            $(".status_checkbox").each(function () {
+                student_status.push({
+                    id: $(this).data('student-id'),
+                    status: $(this).is(':checked')
+                });
+            });
+
+            // Show loading state
+            const $btn = $(this);
+            $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Saving...');
+
+            $.ajax({
+                url: "{% url 'save_updateattendance_data' %}",
+                type: "POST",
+                data: {
+                    attendance_date: attendance_date,
+                    student_ids: JSON.stringify(student_status),
+                    csrfmiddlewaretoken: "{{ csrf_token }}"
+                },
+                success: function (response) {
+                    if (response.status === "success") {
+                        show_message(`${response.message}`, "success");
+
+                        // Update the UI to reflect changes
+                        $(".status_checkbox").each(function () {
+                            const studentId = $(this).data('student-id');
+                            const student = response.updated_students?.find(s => s.id == studentId);
+                            if (student) {
+                                $(this).prop('checked', student.status);
+                                // Update the status text in the table
+                                $(this).closest('tr').find('td:nth-child(2)').text(student.status ? 'Present' : 'Absent');
+                            }
+                        });
+                    } else {
+                        show_message(response.message || "Failed to update attendance", "danger");
+                    }
+                },
+                error: function (xhr) {
+                    let errorMsg = "Error updating attendance";
+                    try {
+                        const response = JSON.parse(xhr.responseText);
+                        errorMsg = response.message || errorMsg;
+                    } catch (e) {
+                        console.error("Error parsing error response:", e);
+                    }
+                    show_message(errorMsg, "danger");
+                },
+                complete: function () {
+                    $btn.prop('disabled', false).html('Save Changes');
+                }
+            });
+        });
+
+        function show_message(message, type) {
+        const $msgBox = $("#message_box");
+        $msgBox.html(`
+            <div class="alert alert-${type} alert-dismissible fade show">
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+                <strong>${type === 'success' ? 'Success!' : 'Error!'}</strong> ${message}
+            </div>
+        `);
+
+        // Auto-hide success messages after 5 seconds
+        if (type === 'success') {
+            setTimeout(() => {
+                $msgBox.find('.alert').alert('close');
+            }, 5000);
+        }
+    }
+    });
+</script>
+{% endblock %}

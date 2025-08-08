@@ -1,0 +1,193 @@
+{% extends 'parent_template/base_template.html' %}
+{% load static %}
+{% block page_title %}
+Parent Notifications
+{% endblock page_title %}
+{% block main_content %}
+<script>
+    // Define the URL for marking notifications as read
+    var markStaffNotificationsAsReadUrl = "{% url 'mark_staff_notifications_as_read' %}";
+</script>
+
+<!-- Main content -->
+<section class="content">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-12">
+        <div class="card card-primary card-outline">
+          <div class="card-header bg-gradient-navy">
+            <h3 class="card-title text-white">
+              <i class="fas fa-bell mr-2"></i>
+              All Notifications
+            </h3>
+          </div>
+          <!-- /.card-header -->
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover table-striped">
+                <thead class="bg-lightblue">
+                  <tr>
+                    <th>ID</th>
+                    <th>Sender</th>
+                    <th>Notification</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th class="text-center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for notification in notifications %}
+                  <tr>
+                    <td class="align-middle font-weight-bold text-primary">#{{ notification.id }}</td>
+                    <td class="align-middle">
+                      {% if notification.admin_id %}
+                        <span class="badge badge-primary">Admin</span>
+                      {% elif notification.staff_id %}
+                        <span class="badge badge-info">Staff</span>
+                      {% else %}
+                        <span class="badge badge-secondary">System</span>
+                      {% endif %}
+                    </td>
+                    <td class="align-middle">
+                      {{ notification.message }}
+                      {% if not notification.is_read and not notification.read_status %}
+                        <span class="badge badge-danger ml-2">New</span>
+                      {% endif %}
+                    </td>
+                    <td class="align-middle">{{ notification.created_at|date:"d M Y H:i" }}</td>
+                    <td class="align-middle">
+                      {% if notification.read_status or notification.is_read %}
+                        <span class="badge badge-success">Read</span>
+                      {% else %}
+                        <span class="badge badge-warning">Unread</span>
+                      {% endif %}
+                    </td>
+                    <td class="align-middle text-center">
+                      {% if notification.admin_id and notification.admin_id != request.user.id %}
+                      <button class="btn btn-sm btn-primary reply-btn" 
+                              data-notification-id="{{ notification.id }}"
+                              data-sender-id="{{ notification.admin_id }}"
+                              data-sender-name="Admin"
+                              data-original-message="{{ notification.message }}">
+                        <i class="fas fa-reply"></i> Reply
+                      </button>
+                      {% elif notification.staff_id and notification.staff_id != request.user.id %}
+                      <button class="btn btn-sm btn-primary reply-btn" 
+                              data-notification-id="{{ notification.id }}"
+                              data-sender-id="{{ notification.staff_id }}"
+                              data-sender-name="Staff"
+                              data-original-message="{{ notification.message }}">
+                        <i class="fas fa-reply"></i> Reply
+                      </button>
+                      {% else %}
+                      <span class="text-muted">N/A</span>
+                      {% endif %}
+                    </td>
+                  </tr>
+                  {% empty %}
+                  <tr>
+                    <td colspan="6" class="text-center py-4">No notifications found</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <!-- /.card-body -->
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- JavaScript -->
+<script>
+// Mark notifications as read when page loads
+$(document).ready(function() {
+    if (typeof markStaffNotificationsAsReadUrl !== 'undefined') {
+        $.ajax({
+            url: markStaffNotificationsAsReadUrl,
+            type: "POST",
+            data: {
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+            success: function(response) {
+                console.log("Notifications marked as read");
+            },
+            error: function(xhr, status, error) {
+                console.error("Error marking notifications as read:", error);
+            }
+        });
+    }
+
+    // Setup reply buttons
+    $('.reply-btn').click(function() {
+        const notificationId = $(this).data('notification-id');
+        const senderId = $(this).data('sender-id');
+        const senderName = $(this).data('sender-name');
+        const originalMessage = $(this).data('original-message');
+        
+        $('#notificationId').val(notificationId);
+        $('#recipientId').val(senderId);
+        $('#recipientName').val(senderName);
+        $('#originalMessage').val(originalMessage);
+        $('#replyMessage').val('');
+        
+        $('#replyModal').modal('show');
+    });
+
+    function submitReply() {
+        const replyMessage = $('#replyMessage').val().trim();
+        if (!replyMessage) {
+            alert('Please enter your reply message');
+            return;
+        }
+        $('#replyForm').submit();
+    }
+});
+</script>
+
+<style>
+  /* Match the styling from student template */
+  .bg-gradient-navy {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%) !important;
+  }
+  
+  .bg-lightblue {
+    background-color: #3c8dbc !important;
+    color: white;
+  }
+  
+  .table-hover tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.05) !important;
+  }
+  
+  .table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(0, 0, 0, 0.02);
+  }
+  
+  .badge-primary {
+    background-color: #3c8dbc;
+  }
+  
+  .badge-success {
+    background-color: #00a65a;
+  }
+  
+  .badge-warning {
+    background-color: #f39c12;
+  }
+  
+  .badge-info {
+    background-color: #00c0ef;
+  }
+  
+  .badge-secondary {
+    background-color: #6c757d;
+  }
+  
+  .badge-danger {
+    background-color: #dd4b39;
+  }
+</style>
+{% endblock main_content %}

@@ -1,0 +1,70 @@
+{% extends 'staff_template/base_template.html' %}
+{% block page_title %}
+My Subjects
+{% endblock page_title %}
+{% block main_content %}
+    <!-- Main content -->
+    <section class="content">
+      <div class="container-fluid">
+          <div class="row">
+              <div class="col-md-12">
+                <!-- general form elements -->
+                <div class="card card-primary">
+                  <div class="card-header">
+                    <h3 class="card-title">Subjects Taught by {{ staff.admin.first_name }} {{ staff.admin.last_name }}</h3>
+                  </div>
+                  <!-- /.card-header -->
+                  <div class="card-body table-responsive p-0">
+                    <table class="table table-hover text-nowrap">
+                      <thead>
+                        <tr>
+                          <th>ID</th>
+                          <th>Subject Name</th>
+                          <th>Course</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                      {% for subject in subjects %}
+                        <tr>
+                          <td>{{ subject.id }}</td>
+                          <td>{{ subject.subject_name }}</td>
+                          <td>{{ subject.course_id.course_name }}</td>
+                          <td>
+                            <a href="{% url 'subject_students' subject.id %}" class="btn btn-info">View Students</a>
+                          </td>
+                        </tr>
+                      {% empty %}
+                        <tr>
+                          <td colspan="4" class="text-center">No subjects assigned</td>
+                        </tr>
+                      {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+                  <!-- /.card-body -->
+                </div>
+                <!-- /.card -->
+              </div>
+          </div>
+      </div>
+    </section>
+    <!-- /.content -->
+{% endblock main_content %}
+
+{% block custom_js %}
+<script>
+$(document).ready(function(){
+    // Initialize DataTable if needed
+    $('.table').DataTable({
+        "paging": true,
+        "lengthChange": false,
+        "searching": true,
+        "ordering": true,
+        "info": true,
+        "autoWidth": false,
+        "responsive": true,
+    });
+});
+</script>
+{% endblock custom_js %}

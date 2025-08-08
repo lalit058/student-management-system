@@ -1,0 +1,152 @@
+Watching for file changes with StatReloader
+"GET / HTTP/1.1" 301 0
+code 400, message Bad request version ('\x8a\x8a\x13\x01\x13\x02\x13\x03À+À/À,À0Ì©Ì¨À\x13À\x14\x00\x9c\x00\x9d\x00/\x005\x01\x00\x06\x93::\x00\x00ÿ\x01\x00\x01\x00\x00-\x00\x02\x01\x01\x00')
+You're accessing the development server over HTTPS, but it only supports HTTP.
+code 400, message Bad request version ('\x02h2\x08http/1.1\x00')
+You're accessing the development server over HTTPS, but it only supports HTTP.
+code 400, message Bad request version ('úú\x13\x01\x13\x02\x13\x03À+À/À,À0Ì©Ì¨À\x13À\x14\x00\x9c\x00\x9d\x00/\x005\x01\x00\x06\x93\x9a\x9a\x00\x00\x00\x1b\x00\x03\x02\x00\x02\x00\x17\x00\x00ÿ\x01\x00\x01\x00\x00-\x00\x02\x01\x01DÍ\x00\x05\x00\x03\x02h2\x00')
+You're accessing the development server over HTTPS, but it only supports HTTP.
+code 400, message Bad request version ('ªª\x13\x01\x13\x02\x13\x03À+À/À,À0Ì©Ì¨À\x13À\x14\x00\x9c\x00\x9d\x00/\x005\x01\x00\x063')
+You're accessing the development server over HTTPS, but it only supports HTTP.
+code 400, message Bad request version ('ÐÑÏj¥\x13ÍC')
+You're accessing the development server over HTTPS, but it only supports HTTP.
+code 400, message Bad request version ('\x9e\xad³°\x9fç+q1ê\x99F\x87m\x02Ë\x10\x8eßÀ\xad')
+You're accessing the development server over HTTPS, but it only supports HTTP.
+code 400, message Bad request version ('ÚN<åÃnKô9B\x9e\x81\x9dá\x8dÏXBo\x13M\x12ÈÉ²bîÐxXY¿\x13\x869s\x89¸Úµo?\x16à§37{b\x97¥\x9bè\x1aRTX³')
+You're accessing the development server over HTTPS, but it only supports HTTP.
+code 400, message Bad request version ('jj\x13\x01\x13\x02\x13\x03À+À/À,À0Ì©Ì¨À\x13À\x14\x00\x9c\x00\x9d\x00/\x005\x01\x00\x063ÊÊ\x00\x00ÿ\x01\x00\x01\x00\x00\x05\x00\x05\x01\x00\x00\x00\x00DÍ\x00\x05\x00\x03\x02h2\x00+\x00\x07\x06\x9a\x9a\x03\x04\x03\x03\x00-\x00\x02\x01\x01\x00\x12\x00\x00\x00\x17\x00\x00\x003\x04ï\x04í')
+You're accessing the development server over HTTPS, but it only supports HTTP.
+Watching for file changes with StatReloader
+code 400, message Bad request version ("D\x9e`\x93\x05\x18`nhsy!¦£²Â\x87ÅÍ6C»nl\x8f¶wIZõ¥\x8eà¨Åø9WxMïÚªË\x03q\x820XjÂ\x1bôë=æ\x08\x96¼ÕG\x81C'\x90rA\x0e")
+You're accessing the development server over HTTPS, but it only supports HTTP.
+code 400, message Bad request version ('\x15q')
+You're accessing the development server over HTTPS, but it only supports HTTP.
+code 400, message Bad request version ('\x02h2\x08http/1.1\x00')
+You're accessing the development server over HTTPS, but it only supports HTTP.
+code 400, message Bad request version ('ºº\x13\x01\x13\x02\x13\x03À+À/À,À0Ì©Ì¨À\x13À\x14\x00\x9c\x00\x9d\x00/\x005\x01\x00\x06súú\x00\x00\x00\x1b\x00\x03\x02\x00\x02\x00\x12\x00\x00\x00')
+You're accessing the development server over HTTPS, but it only supports HTTP.
+Watching for file changes with StatReloader
+code 400, message Bad request version ('9¿·Iò"íÕDÍ\x00\x05\x00\x03\x02h2\x00')
+You're accessing the development server over HTTPS, but it only supports HTTP.
+code 400, message Bad request version ('P\xad\x823üD\x00°g·Ç')
+You're accessing the development server over HTTPS, but it only supports HTTP.
+code 400, message Bad request version ('\x02h2\x08http/1.1\x00')
+You're accessing the development server over HTTPS, but it only supports HTTP.
+code 400, message Bad request version ('\x00\x12\x00\x10\x04\x03\x08\x04\x04\x01\x05\x03\x08\x05\x05\x01\x08\x06\x06\x01\x00\x12\x00\x00\x003\x04ï\x04í')
+You're accessing the development server over HTTPS, but it only supports HTTP.
+Watching for file changes with StatReloader
+code 400, message Bad request version ('**\x13\x01\x13\x02\x13\x03À+À/À,À0Ì©Ì¨À\x13À\x14\x00\x9c\x00\x9d\x00/\x005\x01\x00\x06\x93\x9a\x9a\x00\x00\x00')
+You're accessing the development server over HTTPS, but it only supports HTTP.
+code 400, message Bad request version ('zz\x13\x01\x13\x02\x13\x03À+À/À,À0Ì©Ì¨À\x13À\x14\x00\x9c\x00\x9d\x00/\x005\x01\x00\x06szz\x00\x00\x00\x17\x00\x00\x00\x05\x00\x05\x01\x00\x00\x00\x00\x00')
+You're accessing the development server over HTTPS, but it only supports HTTP.
+code 400, message Bad request version ('xï\x13.\x9d>ÀÐZï\x89\x06Ù\x124¬')
+You're accessing the development server over HTTPS, but it only supports HTTP.
+code 400, message Bad request version ('\x9cBµÄ&±\x13ÌæHp¸¸nK4R»\x15\x05²%6\x13')
+You're accessing the development server over HTTPS, but it only supports HTTP.
+code 400, message Bad request version ("Vy[\x08£'g\x82Ú\x89>Ø")
+You're accessing the development server over HTTPS, but it only supports HTTP.
+code 400, message Bad request version ('\x8d¼\x17r½')
+You're accessing the development server over HTTPS, but it only supports HTTP.
+Session data corrupted
+Internal Server Error: /
+Traceback (most recent call last):
+  File "C:\Users\Lalit Negi\Desktop\student-management-system\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\Lalit Negi\Desktop\student-management-system\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\Lalit Negi\Desktop\student-management-system\student_management_app\views.py", line 21, in ShowLoginPage
+    return render(request, "login_page.html")
+  File "C:\Users\Lalit Negi\Desktop\student-management-system\venv\Lib\site-packages\django\shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "C:\Users\Lalit Negi\Desktop\student-management-system\venv\Lib\site-packages\django\template\loader.py", line 62, in render_to_string
+    return template.render(context, request)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Lalit Negi\Desktop\student-management-system\venv\Lib\site-packages\django\template\backends\django.py", line 107, in render
+    return self.template.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\Lalit Negi\Desktop\student-management-system\venv\Lib\site-packages\django\template\base.py", line 169, in render
+    with context.bind_template(self):
+         ~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "C:\Users\Lalit Negi\AppData\Local\Programs\Python\Python313\Lib\contextlib.py", line 141, in __enter__
+    return next(self.gen)
+  File "C:\Users\Lalit Negi\Desktop\student-management-system\venv\Lib\site-packages\django\template\context.py", line 256, in bind_template
+    processors = template.engine.template_context_processors + self._processors
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Lalit Negi\Desktop\student-management-system\venv\Lib\site-packages\django\utils\functional.py", line 47, in __get__
+    res = instance.__dict__[self.name] = self.func(instance)
+                                         ~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\Lalit Negi\Desktop\student-management-system\venv\Lib\site-packages\django\template\engine.py", line 118, in template_context_processors
+    return tuple(import_string(path) for path in context_processors)
+  File "C:\Users\Lalit Negi\Desktop\student-management-system\venv\Lib\site-packages\django\template\engine.py", line 118, in <genexpr>
+    return tuple(import_string(path) for path in context_processors)
+                 ~~~~~~~~~~~~~^^^^^^
+  File "C:\Users\Lalit Negi\Desktop\student-management-system\venv\Lib\site-packages\django\utils\module_loading.py", line 30, in import_string
+    return cached_import(module_path, class_name)
+  File "C:\Users\Lalit Negi\Desktop\student-management-system\venv\Lib\site-packages\django\utils\module_loading.py", line 15, in cached_import
+    module = import_module(module_path)
+  File "C:\Users\Lalit Negi\AppData\Local\Programs\Python\Python313\Lib\importlib\__init__.py", line 88, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1324, in _find_and_load_unlocked
+ModuleNotFoundError: No module named 'student_management_app.context_processors'
+Not Found: /favicon.ico
+Watching for file changes with StatReloader
+code 400, message Bad request syntax ('\x16\x03\x01\x07ï\x01\x00\x07ë\x03\x03åv\x98\x0ffÙÿ')
+You're accessing the development server over HTTPS, but it only supports HTTP.
+code 400, message Bad request version ('\x00\x12\x00\x10\x04\x03\x08\x04\x04\x01\x05\x03\x08\x05\x05\x01\x08\x06\x06\x01\x00#\x00\x00\x00')
+You're accessing the development server over HTTPS, but it only supports HTTP.
+code 400, message Bad request version ('\x05Éæ-ÌÇ2Ìª')
+You're accessing the development server over HTTPS, but it only supports HTTP.
+code 400, message Bad request version ('\x00\x12\x00\x10\x04\x03\x08\x04\x04\x01\x05\x03\x08\x05\x05\x01\x08\x06\x06\x01\x00-\x00\x02\x01\x01DÍ\x00\x05\x00\x03\x02h2\x00#\x00\x00\x00')
+You're accessing the development server over HTTPS, but it only supports HTTP.
+code 400, message Bad request version ('ºº\x13\x01\x13\x02\x13\x03À+À/À,À0Ì©Ì¨À\x13À\x14\x00\x9c\x00\x9d\x00/\x005\x01\x00\x063JJ\x00\x00ÿ\x01\x00\x01\x00\x003\x04ï\x04í')
+You're accessing the development server over HTTPS, but it only supports HTTP.
+code 400, message Bad request syntax ('\x16\x03\x01\x06à\x01\x00\x06Ü\x03\x03¦ë\x99Y\xad¢5ùxLâ÷í\x06¹\x90')
+You're accessing the development server over HTTPS, but it only supports HTTP.
+code 400, message Bad request version ('\x00\x12\x00\x10\x04\x03\x08\x04\x04\x01\x05\x03\x08\x05\x05\x01\x08\x06\x06\x01\x00-\x00\x02\x01\x01\x00\x1b\x00\x03\x02\x00\x02\x00+\x00\x07\x06úú\x03\x04\x03\x03DÍ\x00\x05\x00\x03\x02h2\x00')
+You're accessing the development server over HTTPS, but it only supports HTTP.
+code 400, message Bad request version ('\x02h2\x08http/1.1\x00\x05\x00\x05\x01\x00\x00\x00\x00ÿ\x01\x00\x01\x00\x00#\x00\x00\x00\x17\x00\x00\x00\x1b\x00\x03\x02\x00\x02\x00')
+You're accessing the development server over HTTPS, but it only supports HTTP.
+code 400, message Bad request version ("ÔÐ<\x8arÄ°×'\x07-Óe\xad\x00")
+You're accessing the development server over HTTPS, but it only supports HTTP.
+code 400, message Bad request version ('ü\x08ôë²ÊLÀv,Æ\x0fie4TÝ{')
+You're accessing the development server over HTTPS, but it only supports HTTP.
+code 400, message Bad request version ('\x00ð\x12\x00\x91\x9a')
+You're accessing the development server over HTTPS, but it only supports HTTP.
+code 400, message Bad request version ('\x18cÌI')
+You're accessing the development server over HTTPS, but it only supports HTTP.
+code 400, message Bad request version ('¡wà\x7f0±f0;Ñì½ßÑ\x04\x95Vý\x9d=r§G=\x18yo\x8f\x88lòÇ\x00')
+You're accessing the development server over HTTPS, but it only supports HTTP.
+code 400, message Bad request version ('«,©\x14')
+You're accessing the development server over HTTPS, but it only supports HTTP.
+code 400, message Bad request syntax ('\x16\x03\x01\x06À\x01\x00\x06¼\x03\x03k\x83©\x7f.¬ÌÐ\x82ç|¶!\x96\x81\x0e÷_/nàsLø\x05\x9eñ\x0e¢´')
+You're accessing the development server over HTTPS, but it only supports HTTP.
+code 400, message Bad request version ('**\x13\x01\x13\x02\x13\x03À+À/À,À0Ì©Ì¨À\x13À\x14\x00\x9c\x00\x9d\x00/\x005\x01\x00\x06\x93êê\x00\x00\x00\x17\x00\x00\x00\x1b\x00\x03\x02\x00\x02\x00#\x00\x00\x00')
+You're accessing the development server over HTTPS, but it only supports HTTP.
+code 400, message Bad request version ('´')
+You're accessing the development server over HTTPS, but it only supports HTTP.
+code 400, message Bad request version (';\x16êY\x05Ò\x9cÀÃo?u\x03nD')
+You're accessing the development server over HTTPS, but it only supports HTTP.
+code 400, message Bad request version ('jj\x13\x01\x13\x02\x13\x03À+À/À,À0Ì©Ì¨À\x13À\x14\x00\x9c\x00\x9d\x00/\x005\x01\x00\x06\x93ÚÚ\x00\x00\x00')
+You're accessing the development server over HTTPS, but it only supports HTTP.
+code 400, message Bad request version ('à\x01{¨9Ä¶Fo\x86`°\x96\x96¿M\x97©×5\x9dÂxË+è')
+You're accessing the development server over HTTPS, but it only supports HTTP.
+Watching for file changes with StatReloader
+Watching for file changes with StatReloader
+code 400, message Bad request version ('ÊÉ®p7fG±/Qu')
+You're accessing the development server over HTTPS, but it only supports HTTP.
+code 400, message Bad request version ('\x00\x02\x01\x00\x00-\x00\x02\x01\x01\x00#\x00\x00DÍ\x00\x05\x00\x03\x02h2\x00')
+You're accessing the development server over HTTPS, but it only supports HTTP.
+Watching for file changes with StatReloader
+Watching for file changes with StatReloader
+code 400, message Bad request version (',£B4>à')
+You're accessing the development server over HTTPS, but it only supports HTTP.
+code 400, message Bad request version ('\x02h2\x08http/1.1\x00\x05\x00\x05\x01\x00\x00\x00\x00ÿ\x01\x00\x01\x00\x00')
+You're accessing the development server over HTTPS, but it only supports HTTP.
+code 400, message Bad request version ('¡.x\x84½\x10')
+You're accessing the development server over HTTPS, but it only supports HTTP.
+code 400, message Bad request version ('Hb@\x1añ&z')
+You're accessing the development server over HTTPS, but it only supports HTTP.
+C:\Users\Lalit Negi\Desktop\student-management-system\student_management_system\settings.py changed, reloading.

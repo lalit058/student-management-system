@@ -1,0 +1,333 @@
+{% extends 'staff_template/base_template.html' %}
+{% block page_title %}
+Home
+{% endblock page_title %}
+{% block main_content %}
+    <!-- Main content -->
+    <section class="content">
+      <div class="container-fluid">
+          <div class="row">
+          <div class="col-lg-3 col-6">
+            <!-- small box -->
+            <div class="small-box bg-info">
+              <div class="inner">
+                <h3>{{ students_count }}</h3>
+                <p>Student Under me</p>
+              </div>
+              <div class="icon">
+                <i class="ion ion-stats-bars"></i>
+              </div>
+              <a href="{% url 'staff_take_attendance' %}" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+            </div>
+          </div>
+          <!-- ./col -->
+          <div class="col-lg-3 col-6">
+            <!-- small box -->
+            <div class="small-box bg-success">
+              <div class="inner">
+                <h3>{{ attendance_count }}</h3>
+                <p>Total Attendance Taken</p>
+              </div>
+              <div class="icon">
+                <i class="ion ion-stats-bars"></i>
+              </div>
+              <a href="{% url 'staff_take_attendance' %}" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+            </div>
+          </div>
+          <!-- ./col -->
+          <div class="col-lg-3 col-6">
+            <!-- small box -->
+            <div class="small-box bg-warning">
+              <div class="inner">
+                <h3>{{ leave_count }}</h3>
+                <p>Total Leave Taken</p>
+              </div>
+              <div class="icon">
+                <i class="ion ion-stats-bars"></i>
+              </div>
+              <a href="{% url 'staff_apply_leave' %}" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+            </div>
+          </div>
+          <!-- ./col -->
+          <div class="col-lg-3 col-6">
+            <!-- small box -->
+            <div class="small-box bg-danger">
+              <div class="inner">
+                <h3>{{ subject_count }}</h3>
+                <p>Total Subjects</p>
+              </div>
+              <div class="icon">
+                <i class="ion ion-stats-bars"></i>
+              </div>
+              <a href="{% url 'total_subject' %}" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+            </div>
+          </div>
+          <!-- ./col -->
+        </div>
+          <div class="row">
+              <div class="col-lg-6">
+                  <div class="card card-danger">
+                  <div class="card-header">
+                    <h3 class="card-title">Attendance VS Leave Chart</h3>
+                    <div class="card-tools">
+                      <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i>
+                      </button>
+                      <button type="button" class="btn btn-tool" data-card-widget="remove"><i class="fas fa-times"></i></button>
+                    </div>
+                  </div>
+                  <div class="card-body">
+                    <canvas id="pieChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
+                  </div>
+                  <!-- /.card-body -->
+                </div>
+              </div>
+              <div class="col-lg-6">
+               <div class="card card-success">
+                  <div class="card-header">
+                    <h3 class="card-title">Attendance by Subject</h3>
+                    <div class="card-tools">
+                      <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i>
+                      </button>
+                      <button type="button" class="btn btn-tool" data-card-widget="remove"><i class="fas fa-times"></i></button>
+                    </div>
+                  </div>
+                  <div class="card-body">
+                    <div class="chart">
+                      <canvas id="subjectAttendanceChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
+                    </div>
+                  </div>
+              <!-- /.card-body -->
+                </div>
+              </div>
+          </div>
+          <div class="row">
+              <div class="col-lg-12">
+                   <div class="card card-info">
+                  <div class="card-header">
+                    <h3 class="card-title">Student Attendance Data</h3>
+                    <div class="card-tools">
+                      <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i>
+                      </button>
+                      <button type="button" class="btn btn-tool" data-card-widget="remove"><i class="fas fa-times"></i></button>
+                    </div>
+                  </div>
+                  <div class="card-body">
+                    <div class="chart">
+                      <canvas id="studentAttendanceChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
+                    </div>
+                  </div>
+              <!-- /.card-body -->
+                </div>
+              </div>
+          </div>
+      </div>
+    </section>
+    <!-- /.content -->
+{% endblock main_content %}
+
+{% block custom_js %}
+<script>
+    $(document).ready(function(){
+        // 1. Pie Chart (Attendance vs Leave)
+        var attendanceCount = parseInt('{{ attendance_count|default:"0" }}') || 0;
+        var leaveCount = parseInt('{{ leave_count|default:"0" }}') || 0;
+        
+        var pieChart = new Chart(
+            document.getElementById('pieChart').getContext('2d'),
+            {
+                type: 'doughnut',
+                data: {
+                    labels: ['Attendance', 'Leave'],
+                    datasets: [{
+                        data: [attendanceCount, leaveCount],
+                        backgroundColor: ['#4e73df', '#1cc88a'],
+                        hoverBackgroundColor: ['#2e59d9', '#17a673'],
+                        hoverBorderColor: "rgba(234, 236, 244, 1)",
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    var label = context.label || '';
+                                    var value = context.raw || 0;
+                                    var total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    var percentage = Math.round((value / total) * 100);
+                                    return label + ': ' + value + ' (' + percentage + '%)';
+                                }
+                            }
+                        },
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true
+                            }
+                        }
+                    }
+                }
+            }
+        );
+
+        // 2. Attendance by Subject Bar Chart
+        var subjectList = [];
+        var attendanceList = [];
+
+        try {
+            subjectList = JSON.parse('{{ subject_list|escapejs }}') || [];
+            attendanceList = JSON.parse('{{ attendance_list|escapejs }}') || [];
+        } catch(e) {
+            console.error('Error parsing subject data:', e);
+        }
+
+        // Calculate max attendance for scaling
+        var maxAttendance = Math.max(...(attendanceList.length ? attendanceList : [1]));
+
+        var subjectBarChart = new Chart(
+            document.getElementById('subjectAttendanceChart').getContext('2d'), 
+            {
+                type: 'bar',
+                data: {
+                    labels: subjectList,
+                    datasets: [{
+                        label: 'Attendance Count',
+                        data: attendanceList,
+                        backgroundColor: subjectList.map((_, index) => {
+                            // Color based on percentage of max attendance
+                            const percentage = attendanceList[index] / maxAttendance;
+                            return `hsl(${Math.round(120 * percentage)}, 70%, 50%)`; // Green scale
+                        }),
+                        borderColor: subjectList.map((_, index) => {
+                            const percentage = attendanceList[index] / maxAttendance;
+                            return `hsl(${Math.round(120 * percentage)}, 70%, 40%)`;
+                        }),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.raw}`;
+                                },
+                                afterLabel: function(context) {
+                                    const percentage = Math.round((context.raw / maxAttendance) * 100);
+                                    return `Relative: ${percentage}% of max`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: Math.ceil(maxAttendance * 1.1), // 10% padding
+                            ticks: {
+                                stepSize: Math.ceil(maxAttendance / 5)
+                            }
+                        }
+                    }
+                }
+            }
+        );
+
+        // 3. Student Attendance Stacked Bar Chart
+        var studentList = [];
+        var presentList = [];
+        var absentList = [];
+
+        try {
+            studentList = JSON.parse('{{ student_list|escapejs }}') || [];
+            presentList = JSON.parse('{{ present_list|escapejs }}') || [];
+            absentList = JSON.parse('{{ absent_list|escapejs }}') || [];
+        } catch(e) {
+            console.error('Error parsing student attendance data:', e);
+        }
+
+        // Truncate long names for display
+        var displayNames = studentList.map(name => 
+            name.length > 10 ? name.substring(0, 8) + '...' : name
+        );
+
+        var studentAttendanceChart = new Chart(
+            document.getElementById('studentAttendanceChart').getContext('2d'),
+            {
+                type: 'bar',
+                data: {
+                    labels: displayNames,
+                    datasets: [
+                        {
+                            label: 'Present',
+                            data: presentList,
+                            backgroundColor: '#28a745', // Green
+                            borderColor: '#218838',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Absent',
+                            data: absentList,
+                            backgroundColor: '#dc3545', // Red
+                            borderColor: '#c82333',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                footer: function(tooltipItems) {
+                                    let present = 0, absent = 0;
+                                    
+                                    // Find both datasets for this student
+                                    tooltipItems.forEach(item => {
+                                        if (item.dataset.label === 'Present') {
+                                            present = item.raw;
+                                        } else if (item.dataset.label === 'Absent') {
+                                            absent = item.raw;
+                                        }
+                                    });
+                                    
+                                    const total = present + absent;
+                                    const percentage = total > 0 ? 
+                                        Math.round((present / total) * 100) : 0;
+                                        
+                                    return [
+                                        `Total Classes: ${total}`,
+                                        `Attendance Rate: ${percentage}%`
+                                    ];
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            stacked: true,
+                            grid: {
+                                display: false
+                            }
+                        },
+                        y: {
+                            stacked: true,
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Number of Classes'
+                            }
+                        }
+                    }
+                }
+            }
+        );
+    });
+</script>
+{% endblock custom_js %}

@@ -1,0 +1,280 @@
+{% extends 'hod_template/base_template.html' %}
+{% block page_title %}
+Manage Subjects
+{% endblock page_title %}
+{% load static %}
+{% block main_content %}
+<!-- Main content -->
+<section class="content">
+  <div class="container-fluid">
+    <!-- Message Display -->
+    <div class="row">
+      <div class="col-12">
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        {% endfor %}
+        {% endif %}
+      </div>
+    </div>
+    <!-- End Message Display -->
+
+    <div class="row">
+      <div class="col-12">
+        <div class="card card-primary card-outline">
+          <div class="card-header bg-gradient-navy">
+            <h3 class="card-title text-white">
+              <i class="fas fa-book mr-2"></i>
+              Subject Details
+            </h3>
+            <div class="card-tools">
+              <form method="get" class="form-inline">
+                <div class="input-group input-group-sm" style="width: 250px;">
+                  <input type="text" name="search" class="form-control" placeholder="Search subjects..."
+                    value="{{ request.GET.search }}">
+                  <div class="input-group-append">
+                    <button type="submit" class="btn btn-light">
+                      <i class="fas fa-search"></i>
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+          <!-- /.card-header -->
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover table-striped">
+                <thead class="bg-lightblue">
+                  <tr>
+                    <th>ID</th>
+                    <th>Subject Name</th>
+                    <th>Course</th>
+                    <th>Assigned Staff</th>
+                    <th class="text-center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for subject in subjects %}
+                  <tr class="{% cycle 'bg-white' 'bg-gray-50' %}">
+                    <td class="align-middle font-weight-bold text-primary">#{{ subject.id }}</td>
+                    <td class="align-middle font-weight-bold">{{ subject.subject_name }}</td>
+                    <td class="align-middle">
+                      {{ subject.course_id.course_name }}
+                    </td>
+                    <td class="align-middle">
+                      {% if subject.staff_id %}
+                      <div class="d-flex align-items-center">
+                        <div class="avatar-circle-sm mr-2">
+                          {% if subject.staff_id.admin.profile_pic %}
+                          <img src="{{ subject.staff_id.admin.profile_pic.url }}" class="img-circle" alt="Profile"
+                            onerror="this.onerror=null;this.src='{% static 'dist/img/user2-160x160.jpg' %}'">
+                          {% else %}
+                          <img src="{% static 'dist/img/user2-160x160.jpg' %}" class="img-circle" alt="Default Profile">
+                          {% endif %}
+                        </div>
+                        <div>
+                          {{ subject.staff_id.first_name }} {{ subject.staff_id.last_name }}
+                          <div class="text-muted small">{{ subject.staff_id.email }}</div>
+                        </div>
+                      </div>
+                      {% else %}
+                      <span class="text-danger">Not assigned</span>
+                      {% endif %}
+                    </td>
+                    <td class="align-middle text-center">
+                      <div class="btn-group" role="group">
+                        <a href="{% url 'edit_subject' subject_id=subject.id %}" class="btn btn-sm btn-outline-success"
+                          title="Edit" data-toggle="tooltip">
+                          <i class="fas fa-edit"></i>
+                        </a>
+                        <button class="btn btn-sm btn-outline-danger" data-toggle="modal"
+                          data-target="#deleteModal{{ subject.id }}" title="Delete" data-toggle="tooltip">
+                          <i class="fas fa-trash"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+
+                  <!-- Delete Modal for each subject -->
+                  <div class="modal fade" id="deleteModal{{ subject.id }}" tabindex="-1" role="dialog"
+                    aria-labelledby="deleteModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered" role="document">
+                      <div class="modal-content">
+                        <div class="modal-header bg-danger text-white">
+                          <h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
+                          <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                          </button>
+                        </div>
+                        <div class="modal-body">
+                          <div class="text-center mb-4">
+                            <i class="fas fa-book fa-4x text-danger mb-3"></i>
+                            <h4>{{ subject.subject_name }}</h4>
+                            <p class="text-muted">{{ subject.course_id.course_name }}</p>
+                            <div class="text-left mt-3">
+                              <p><strong>Assigned Staff:</strong>
+                                {% if subject.staff_id %}
+                                {{ subject.staff_id.first_name }} {{ subject.staff_id.last_name }}
+                                {% else %}
+                                <span class="text-danger">Not assigned</span>
+                                {% endif %}
+                              </p>
+                            </div>
+                          </div>
+                          {% if subject.attendance_set.exists or subject.studentresult_set.exists %}
+                          <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>
+                            <strong>Warning:</strong> This subject has associated records:
+                            <ul class="mt-2 mb-0">
+                              {% if subject.attendance_set.exists %}
+                              <li>{{ subject.attendance_set.count }} attendance records</li>
+                              {% endif %}
+                              {% if subject.studentresult_set.exists %}
+                              <li>{{ subject.studentresult_set.count }} student results</li>
+                              {% endif %}
+                            </ul>
+                          </div>
+                          {% endif %}
+                        </div>
+                        <div class="modal-footer">
+                          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                          <form method="POST" action="{% url 'delete_subject' subject_id=subject.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">
+                              <i class="fas fa-trash mr-1"></i> Delete Permanently
+                            </button>
+                          </form>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <!-- /.card-body -->
+          <div class="card-footer bg-white">
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="text-muted">
+                Showing <strong>{{ subjects.start_index }}</strong> to <strong>{{ subjects.end_index }}</strong> of
+                <strong>{{ subjects.paginator.count }}</strong> subjects
+              </div>
+              {% if subjects.has_other_pages %}
+              <nav aria-label="Page navigation">
+                <ul class="pagination pagination-sm m-0">
+                  {% if subjects.has_previous %}
+                  <li class="page-item">
+                    <a class="page-link"
+                      href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}"
+                      aria-label="First">
+                      <span aria-hidden="true">&laquo;&laquo;</span>
+                    </a>
+                  </li>
+                  <li class="page-item">
+                    <a class="page-link"
+                      href="?page={{ subjects.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}"
+                      aria-label="Previous">
+                      <span aria-hidden="true">&laquo;</span>
+                    </a>
+                  </li>
+                  {% endif %}
+
+                  {% for i in subjects.paginator.page_range %}
+                  {% if subjects.number == i %}
+                  <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+                  {% elif i > subjects.number|add:'-3' and i < subjects.number|add:'3' %} <li class="page-item"><a
+                      class="page-link"
+                      href="?page={{ i }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">{{ i
+                      }}</a></li>
+                    {% endif %}
+                    {% endfor %}
+
+                    {% if subjects.has_next %}
+                    <li class="page-item">
+                      <a class="page-link"
+                        href="?page={{ subjects.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}"
+                        aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                      </a>
+                    </li>
+                    <li class="page-item">
+                      <a class="page-link"
+                        href="?page={{ subjects.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}"
+                        aria-label="Last">
+                        <span aria-hidden="true">&raquo;&raquo;</span>
+                      </a>
+                    </li>
+                    {% endif %}
+                </ul>
+              </nav>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* Custom Styles - Same as manage_staff.html */
+  .bg-gradient-navy {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%) !important;
+  }
+
+  .avatar-circle-sm {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid #dee2e6;
+  }
+
+  .avatar-circle-sm img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .table-hover tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.05) !important;
+  }
+
+  .table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(0, 0, 0, 0.02);
+  }
+
+  .btn-group .btn {
+    margin-right: 5px;
+    border-radius: 4px !important;
+  }
+
+  .btn-group .btn:last-child {
+    margin-right: 0;
+  }
+
+  .modal-content {
+    border: none;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+  }
+
+  .modal-header {
+    border-bottom: none;
+  }
+</style>
+
+<script>
+  $(document).ready(function () {
+    // Initialize tooltips
+    $('[data-toggle="tooltip"]').tooltip();
+  });
+</script>
+<!-- /.content -->
+{% endblock main_content %}

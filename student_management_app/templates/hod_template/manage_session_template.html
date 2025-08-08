@@ -1,0 +1,165 @@
+{% extends 'hod_template/base_template.html' %}
+{% block page_title %}
+Manage Session Years
+{% endblock page_title %}
+{% block main_content %}
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <!-- general form elements -->
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">Add Session Year</h3>
+                    </div>
+                    <!-- /.card-header -->
+                    <!-- form start -->
+                    <form role="form" action="/add_session_save" method="post">
+                        {% csrf_token %}
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label>Session Start Year</label>
+                                <input type="date" class="form-control" name="session_start" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Session End Year</label>
+                                <input type="date" class="form-control" name="session_end" required>
+                            </div>
+
+                            <div class="form-group">
+                                {% if messages %}
+                                {% for message in messages %}
+                                {% if message.tags == 'error' %}
+                                <div class="alert alert-danger" style="margin-top:10px">{{ message }}</div>
+                                {% endif %}
+                                {% if message.tags == 'success' %}
+                                <div class="alert alert-success" style="margin-top:10px">{{ message }}</div>
+                                {% endif %}
+                                {% endfor %}
+                                {% endif %}
+                            </div>
+                        </div>
+                        <!-- /.card-body -->
+
+                        <div class="card-footer">
+                            <button type="submit" class="btn btn-primary btn-block">Add Session Year</button>
+                        </div>
+                    </form>
+                </div>
+                <!-- /.card -->
+            </div>
+        </div>
+
+        <!-- Existing Sessions Section -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card card-secondary">
+                    <div class="card-header">
+                        <h3 class="card-title">Existing Session Years</h3>
+                    </div>
+                    <!-- /.card-header -->
+                    <div class="card-body">
+                        <table class="table table-bordered table-hover" id="session_table">
+                            <thead style="background-color: #7d7b7a;">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Session Start</th>
+                                    <th>Session End</th>
+                                    <th>Students Enrolled</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for session in sessions %}
+                                <tr>
+                                    <td>{{ session.id }}</td>
+                                    <td>{{ session.session_start_year|date:"Y-m-d" }}</td>
+                                    <td>{{ session.session_end_year|date:"Y-m-d" }}</td>
+                                    <td>{{ session.students.count }}</td>
+                                    <td>
+                                        <a href="{% url 'edit_session' session.id %}"
+                                                class="btn btn-success btn-sm" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                                
+                                        <button class="btn btn-danger btn-sm" data-toggle="modal" data-target="#deleteModal{{ session.id }}" title="Delete"
+                                                {% if session.students.count > 0 %}disabled title="Cannot delete - students are enrolled"{% endif %}>
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                        
+                                        <!-- Delete Modal -->
+                                        <div class="modal fade" id="deleteModal{{ session.id }}" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+                                            <div class="modal-dialog" role="document">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title" id="deleteModalLabel">Confirm Delete</h5>
+                                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                            <span aria-hidden="true">&times;</span>
+                                                        </button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        Are you sure you want to delete session {{ session.session_start_year|date:"Y" }} to {{ session.session_end_year|date:"Y" }}?
+                                                        {% if session.students.count > 0 %}
+                                                        <div class="alert alert-danger mt-2">
+                                                            <strong>Warning:</strong> This session has {{ session.students.count }} students enrolled!
+                                                        </div>
+                                                        {% endif %}
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                                                        <form method="post" action="{% url 'delete_session' session.id %}">
+                                                            {% csrf_token %}
+                                                            <button type="submit" class="btn btn-danger" {% if session.students.count > 0 %}disabled{% endif %}>
+                                                                Delete
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- /.card-body -->
+                </div>
+                <!-- /.card -->
+            </div>
+        </div>
+    </div>
+</section>
+<style>
+    .card-secondary:not(.card-outline)>.card-header {
+    background-color: #007bff !important;
+}
+</style>
+<!-- /.content -->
+{% endblock main_content %}
+
+{% block custom_js %}
+<script>
+    $(document).ready(function() {
+        // Initialize date inputs with today's date as default
+        let today = new Date().toISOString().split('T')[0];
+        $("input[type='date']").val(today);
+        
+        // Initialize DataTable with enhanced features
+        $('#session_table').DataTable({
+            "paging": true,
+            "lengthChange": true,
+            "searching": true,
+            "ordering": true,
+            "order": [[1, 'desc']], // Default sort by start date descending
+            "info": true,
+            "autoWidth": false,
+            "responsive": true,
+            "columnDefs": [
+                { "orderable": false, "targets": [4] } // Disable sorting for action column
+            ]
+        });
+    });
+</script>
+{% endblock custom_js %}
