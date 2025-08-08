@@ -165,18 +165,27 @@ def get_students(request):
     return JsonResponse(json.dumps(list_data),content_type="application/json",safe=False)
 
 from django.utils import timezone
-import pytz
 from datetime import datetime
 import json
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from student_management_app.models import Subjects, SessionYearModel, Students, Attendance, AttendanceReport
 
+from django.utils import timezone
+from datetime import datetime
+import json
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.db import IntegrityError
+from django.conf import settings
+from student_management_app.models import Subjects, SessionYearModel, Students, Attendance, AttendanceReport
+
 @csrf_exempt
 def save_attendance_data(request):
     try:
-        nepali_tz = pytz.timezone('Asia/Kathmandu')
-        today = timezone.now().astimezone(nepali_tz).date()
+        # Set timezone to Asia/Kathmandu (must be set in settings.py)
+        # settings.TIME_ZONE should be 'Asia/Kathmandu'
+        today = timezone.localtime(timezone.now()).date()
         
         student_ids = request.POST.get("student_ids")
         subject_id = request.POST.get("subject_id")
@@ -199,8 +208,8 @@ def save_attendance_data(request):
                     "message": f"Attendance can only be taken for today's date ({today})"
                 }, status=400)
                 
-            # Create timezone-aware datetime at midnight Nepal time
-            attendance_date = nepali_tz.localize(
+            # Create datetime at midnight in current timezone
+            attendance_date = timezone.make_aware(
                 datetime.combine(input_date, datetime.min.time())
             )
         except ValueError:
@@ -267,7 +276,6 @@ def save_attendance_data(request):
         return JsonResponse({"status": "error", "message": "Student not found"}, status=404)
     except Exception as e:
         return JsonResponse({"status": "error", "message": str(e)}, status=500)
-    
     
 def staff_update_attendance(request):
     subjects = Subjects.objects.filter(staff_id=request.user.id)
