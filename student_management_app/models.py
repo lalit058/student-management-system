@@ -1,8 +1,6 @@
 from django.db.models import Value
 Value(None)
 from django.utils import timezone
-import pytz
-from datetime import datetime
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.db.models.signals import post_save
@@ -155,7 +153,7 @@ class Parents(models.Model):
 class Attendance(models.Model):
     id = models.AutoField(primary_key=True)
     subject_id = models.ForeignKey(Subjects, on_delete=models.CASCADE)
-    attendance_date = models.DateTimeField()  # Remove default, we'll handle it in save()
+    attendance_date = models.DateTimeField()  # Remove default, handle in save()
     session_year_id = models.ForeignKey(SessionYearModel, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -165,13 +163,11 @@ class Attendance(models.Model):
         unique_together = ('subject_id', 'attendance_date', 'session_year_id')
     
     def save(self, *args, **kwargs):
-        # Ensure attendance_date is timezone-aware in Nepal time
+        # Ensure TIME_ZONE = 'Asia/Kathmandu' is set in settings.py
         if not self.attendance_date:
-            nepali_tz = pytz.timezone('Asia/Kathmandu')
-            self.attendance_date = timezone.now().astimezone(nepali_tz)
+            self.attendance_date = timezone.now()
         elif not timezone.is_aware(self.attendance_date):
-            nepali_tz = pytz.timezone('Asia/Kathmandu')
-            self.attendance_date = timezone.make_aware(self.attendance_date, nepali_tz)
+            self.attendance_date = timezone.make_aware(self.attendance_date)
         super().save(*args, **kwargs)
 
 

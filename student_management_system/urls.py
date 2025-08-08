@@ -22,7 +22,6 @@ urlpatterns = [
     path('',views.ShowLoginPage,name="show_login"),
     path('get_user_details', views.GetUserDetails),
     path('logout_user', views.logout_user,name="logout"),
-    path('captcha/', include('captcha.urls')),
     path('doLogin/',views.doLogin,name="do_login"),
     path('manage_admin/', HodViews.manage_admin, name='manage_admin'),
     path('admin_home/',HodViews.admin_home,name="admin_home"),
