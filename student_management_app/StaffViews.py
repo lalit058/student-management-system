@@ -8,6 +8,7 @@ from django.utils import timezone
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from datetime import datetime
 from django.db.models import Q
+from zoneinfo import ZoneInfo
 from django.conf import settings
 from django.shortcuts import render, redirect
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
@@ -129,7 +130,7 @@ def staff_take_attendance(request):
     subjects = Subjects.objects.filter(staff_id=request.user.id)
     
     # Get current date in Nepal Timezone
-    nepali_tz = pytz.timezone('Asia/Kathmandu')
+    nepali_tz = ZoneInfo('Asia/Kathmandu')
     current_date_npt = timezone.now().astimezone(nepali_tz).date()
     
     # Get all available session years
