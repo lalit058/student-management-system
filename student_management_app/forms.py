@@ -2,13 +2,17 @@ from django import forms
 from django.forms import ChoiceField, ValidationError
 from django.core.validators import RegexValidator, MinValueValidator, MaxValueValidator
 from django import forms
+from django.utils import timezone
 from django.forms import ChoiceField
 import re
-
-from student_management_app.models import Courses, AdminHOD, SessionYearModel, Subjects
-from .models import CustomUser, Parents, Staffs
-
-from student_management_app.models import Courses, SessionYearModel, Subjects, Students, CustomUser
+from datetime import date
+from student_management_app.models import Courses, AdminHOD, SessionYearModel, Subjects, Students, CustomUser
+from .models import (
+    CustomUser,
+    Parents,
+    Staffs
+    
+    )
 
 class ChoiceNoValidation(ChoiceField):
     def validate(self, value):
@@ -188,7 +192,7 @@ class AddStudentForm(forms.Form):
         widget=forms.PasswordInput(attrs={
             "class": "form-control",
             "required": "required",
-            "pattern": "^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$",
+            "pattern": r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$",
             "title": "Password must contain: 8+ chars, 1 uppercase, 1 lowercase, 1 number, 1 special character",
             "oninput": "validatePassword(this)",
             "hx-post": "/validate_password/",
@@ -514,3 +518,4 @@ class CustomStaffCreationForm(forms.ModelForm):
                 joining_date=self.cleaned_data['joining_date']
             )
         return user
+    

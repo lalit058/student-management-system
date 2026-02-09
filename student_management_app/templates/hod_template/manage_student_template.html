@@ -45,7 +45,7 @@ Manage Students
                 {% endif %}
                 {% if selected_session %}
                 <span class="badge badge-warning mr-2 mb-1">
-                  <i class="fas fa-calendar-alt mr-1"></i> Session: {{ selected_session_years }}
+                  <i class="fas fa-calendar-alt mr-1"></i> Session: {{ admin.selected_session_years }}
                 </span>
                 {% endif %}
               </div>
@@ -82,7 +82,7 @@ Manage Students
           <!-- /.card-header -->
           <div class="card-body p-0">
             <!-- Filter Options (placed before the table) -->
-            <div class="p-3 border-bottom">
+            <div class="p-3 border-bottom" style="    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%) !important;">
               <form method="GET" action="" class="form-inline">
                 <div class="form-group mr-2 mb-2">
                   <select name="course" id="course_filter" class="form-control form-control-sm">
@@ -352,8 +352,10 @@ Manage Students
     font-size: 12px;
     color: #666;
   }
+</style>
 
-
+<style>
+  /* Custom Styles */
   .bg-gradient-navy {
     background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%) !important;
   }

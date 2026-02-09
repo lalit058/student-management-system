@@ -88,23 +88,26 @@
 
 <!-- Hidden printable area -->
 <div id="printableArea" style="display: none;">
-    <div style="text-align: center; margin-bottom: 20px;">
+    <div style="text-align: center; margin-bottom: 20px; ">
         <h2>Staff Profile</h2>
         <h3>{{ staff.admin.get_full_name }}</h3>
-        <p>{{ staff.admin.email }}</p>
-        <p><strong>Experience:</strong> {{ staff.years_of_experience }} years</p>
-    </div>
-    <div style="display: flex; margin-bottom: 30px;">
-        <div style="flex: 1; text-align: center;">
-            {% if staff.profile_pic %}
-                <img src="{{ staff.profile_pic }}" style="border-radius: 50%; width: 150px; height: 150px; object-fit: cover;" alt="Profile">
+        {% if staff.profile_pic %}
+                <img src="{{ staff.profile_pic }}" style="width: 150px; height: 150px; object-fit: cover no-repeat;" alt="Profile">
             {% else %}
                 <img src="{% static 'dist/img/user2-160x160.jpg' %}" style="border-radius: 50%; width: 150px; height: 150px; object-fit: cover;" alt="Default Profile">
             {% endif %}
-        </div>
-        <div style="flex: 2; padding-left: 30px;">
-            <table style="width: 100%; border-collapse: collapse;">
-                <tr style="border-bottom: 1px solid #ddd;">
+            <p></p>
+        <p><strong>Experience:</strong> {{ staff.years_of_experience }} years</p>
+        
+    </div>
+    <div style="display: flex; margin-bottom: 30px; ">
+        <div style="flex: 2; padding-left: 40px;">
+            <table style="width: 100%; border-collapse: collapse; ">
+                <tr>
+                    <th style="text-align: left; padding: 8px;">Id</th>
+                    <td style="padding: 8px;">{{ staff.admin.id }}</td>
+                </tr>
+                <tr>
                     <th style="text-align: left; padding: 8px; width: 30%;">Username</th>
                     <td style="padding: 8px;">{{ staff.admin.username }}</td>
                 </tr>
@@ -150,7 +153,7 @@
                         {% with staff.subjects_set.all as staff_subjects %}
                             {% if staff_subjects %}
                                 {% for subject in staff_subjects %}
-                                    {{ subject.course_id.course_name }}{% if not forloop.last %}, {% endif %}
+                                    {{ subject.admin.course_id.course_name }}{% if not forloop.last %}, {% endif %}
                                 {% endfor %}
                             {% else %}
                                 Not assigned to any courses

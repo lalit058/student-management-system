@@ -1,0 +1,358 @@
+{% extends 'hod_template/base_template.html' %}
+{% load static %}
+
+{% block page_title %}
+Manage TimeTable
+{% endblock page_title %}
+
+{% block main_content %}
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <!-- Display Messages -->
+                {% if messages %}
+                <div class="col-md-12">
+                    {% for message in messages %}
+                    <div class="alert alert-{% if message.tags %}{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %}{% endif %}">
+                        {{ message }}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                <!-- general form elements -->
+                <div class="card card-primary">
+                    <div class="card-header bg-gradient-navy">
+                        <h3 class="card-title text-white">
+                            <i class="fas fa-calendar-alt mr-2"></i>
+                            Manage TimeTable
+                        </h3>
+                    </div>
+
+                    <!-- Timetable Filter Form -->
+                    <div class="card-body">
+                        <form method="GET" action="">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Faculty</label>
+                                        <select class="form-control select2" style="width: 100%;" name="faculty" id="faculty">
+                                            <option value="">Select Faculty</option>
+                                            {% for faculty in faculties %}
+                                            <option value="{{ faculty.id }}" {% if selected_faculty == faculty.id|stringformat:"s" %}selected{% endif %}>{{ faculty.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Semester</label>
+                                        <select class="form-control select2" style="width: 100%;" name="semester" id="semester">
+                                            <option value="">Select Semester</option>
+                                            {% for semester in semesters %}
+                                            <option value="{{ semester.id }}" {% if selected_semester == semester.id|stringformat:"s" %}selected{% endif %}>{{ semester.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>&nbsp;</label>
+                                        <button type="submit" class="btn btn-primary btn-block">
+                                            <i class="fas fa-filter mr-1"></i> Filter
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Timetable Display -->
+                    {% if timetable_data %}
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-bordered timetable-table">
+                                <thead class="bg-lightblue">
+                                    <tr>
+                                        <th style="width: 12%;">Time/Day</th>
+                                        <th style="width: {% widthratio 88 6 1 %}%;">SUN</th>
+                                        <th style="width: {% widthratio 88 6 1 %}%;">MON</th>
+                                        <th style="width: {% widthratio 88 6 1 %}%;">TUE</th>
+                                        <th style="width: {% widthratio 88 6 1 %}%;">WED</th>
+                                        <th style="width: {% widthratio 88 6 1 %}%;">THU</th>
+                                        <th style="width: {% widthratio 88 6 1 %}%;">FRI</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Time Slot 1: 10:00-11:00 -->
+                                    <tr>
+                                        <td class="time-slot">10:00 - 11:00</td>
+                                        {% for day in days %}
+                                        <td class="timetable-cell">
+                                            {% for entry in timetable_data %}
+                                                {% if entry.day == day and entry.time_slot == "10:00-11:00" %}
+                                                <div class="timetable-entry p-2">
+                                                    <strong>{{ entry.subject.subject_name }}</strong>
+                                                    <div class="timetable-details">
+                                                        <small>Room: {{ entry.room_number }}</small>
+                                                        <small>Teacher: {{ entry.staff.admin.get_full_name }}</small>
+                                                    </div>
+                                                    {% if entry.is_lab %}<span class="badge bg-info">Lab</span>{% endif %}
+                                                </div>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </td>
+                                        {% endfor %}
+                                    </tr>
+
+                                    <!-- Time Slot 2: 11:00-12:00 -->
+                                    <tr>
+                                        <td class="time-slot">11:00 - 12:00</td>
+                                        {% for day in days %}
+                                        <td class="timetable-cell">
+                                            {% for entry in timetable_data %}
+                                                {% if entry.day == day and entry.time_slot == "11:00-12:00" %}
+                                                <div class="timetable-entry p-2">
+                                                    <strong>{{ entry.subject.subject_name }}</strong>
+                                                    <div class="timetable-details">
+                                                        <small>Room: {{ entry.room_number }}</small>
+                                                        <small>Teacher: {{ entry.staff.admin.get_full_name }}</small>
+                                                    </div>
+                                                    {% if entry.is_lab %}<span class="badge bg-info">Lab</span>{% endif %}
+                                                </div>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </td>
+                                        {% endfor %}
+                                    </tr>
+
+                                    <!-- Time Slot 3: 12:00-1:00 -->
+                                    <tr>
+                                        <td class="time-slot">12:00 - 1:00</td>
+                                        {% for day in days %}
+                                        <td class="timetable-cell">
+                                            {% for entry in timetable_data %}
+                                                {% if entry.day == day and entry.time_slot == "12:00-13:00" %}
+                                                <div class="timetable-entry p-2">
+                                                    <strong>{{ entry.subject.subject_name }}</strong>
+                                                    <div class="timetable-details">
+                                                        <small>Room: {{ entry.room_number }}</small>
+                                                        <small>Teacher: {{ entry.staff.admin.get_full_name }}</small>
+                                                    </div>
+                                                    {% if entry.is_lab %}<span class="badge bg-info">Lab</span>{% endif %}
+                                                </div>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </td>
+                                        {% endfor %}
+                                    </tr>
+
+                                    <!-- Break Row -->
+                                    <tr>
+                                        <td class="time-slot">1:00 - 1:30</td>
+                                        {% for day in days %}
+                                        <td class="timetable-cell break-cell">
+                                            <div class="break-entry p-2 text-center">
+                                                <strong>Break</strong>
+                                            </div>
+                                        </td>
+                                        {% endfor %}
+                                    </tr>
+
+                                    <!-- Time Slot 4: 1:30-2:30 -->
+                                    <tr>
+                                        <td class="time-slot">1:30 - 2:30</td>
+                                        {% for day in days %}
+                                        <td class="timetable-cell">
+                                            {% for entry in timetable_data %}
+                                                {% if entry.day == day and entry.time_slot == "13:30-14:30" %}
+                                                <div class="timetable-entry p-2">
+                                                    <strong>{{ entry.subject.subject_name }}</strong>
+                                                    <div class="timetable-details">
+                                                        <small>Room: {{ entry.room_number }}</small>
+                                                        <small>Teacher: {{ entry.staff.admin.get_full_name }}</small>
+                                                    </div>
+                                                    {% if entry.is_lab %}<span class="badge bg-info">Lab</span>{% endif %}
+                                                </div>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </td>
+                                        {% endfor %}
+                                    </tr>
+
+                                    <!-- Time Slot 5: 2:30-3:30 -->
+                                    <tr>
+                                        <td class="time-slot">2:30 - 3:30</td>
+                                        {% for day in days %}
+                                        <td class="timetable-cell">
+                                            {% for entry in timetable_data %}
+                                                {% if entry.day == day and entry.time_slot == "14:30-15:30" %}
+                                                <div class="timetable-entry p-2">
+                                                    <strong>{{ entry.subject.subject_name }}</strong>
+                                                    <div class="timetable-details">
+                                                        <small>Room: {{ entry.room_number }}</small>
+                                                        <small>Teacher: {{ entry.staff.admin.get_full_name }}</small>
+                                                    </div>
+                                                    {% if entry.is_lab %}<span class="badge bg-info">Lab</span>{% endif %}
+                                                </div>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </td>
+                                        {% endfor %}
+                                    </tr>
+
+                                    <!-- Time Slot 6: 3:30-4:30 -->
+                                    <tr>
+                                        <td class="time-slot">3:30 - 4:30</td>
+                                        {% for day in days %}
+                                        <td class="timetable-cell">
+                                            {% for entry in timetable_data %}
+                                                {% if entry.day == day and entry.time_slot == "15:30-16:30" %}
+                                                <div class="timetable-entry p-2">
+                                                    <strong>{{ entry.subject.subject_name }}</strong>
+                                                    <div class="timetable-details">
+                                                        <small>Room: {{ entry.room_number }}</small>
+                                                        <small>Teacher: {{ entry.staff.admin.get_full_name }}</small>
+                                                    </div>
+                                                    {% if entry.is_lab %}<span class="badge bg-info">Lab</span>{% endif %}
+                                                </div>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </td>
+                                        {% endfor %}
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <i class="icon fas fa-info"></i>
+                            {% if selected_faculty and selected_semester %}
+                            No timetable entries found for the selected faculty and semester.
+                            {% else %}
+                            Please select a faculty and semester to view timetable.
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Action Buttons -->
+                    <div class="card-footer">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <a href="{% url 'add_timetable' %}" class="btn btn-primary">
+                                    <i class="fas fa-plus mr-1"></i> Add New Entry
+                                </a>
+                            </div>
+                            <div class="col-md-6 text-right">
+                                <button class="btn btn-success" onclick="window.print()">
+                                    <i class="fas fa-print mr-1"></i> Print Timetable
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock main_content %}
+
+{% block custom_js %}
+<script>
+$(document).ready(function() {
+    // Initialize Select2 Elements
+    $('.select2').select2();
+
+    // Faculty change event to load semesters
+    $("#faculty").change(function() {
+        var faculty_id = $(this).val();
+        if (faculty_id) {
+            $.ajax({
+                url: "{% url 'get_semesters' %}",
+                data: {
+                    'faculty_id': faculty_id
+                },
+                success: function(data) {
+                    $("#semester").html('<option value="">Select Semester</option>');
+                    $.each(data, function(key, value) {
+                        $("#semester").append('<option value="' + value.id + '">' + value.name + '</option>');
+                    });
+                }
+            });
+        } else {
+            $("#semester").html('<option value="">Select Semester</option>');
+        }
+    });
+
+    // Auto-submit form when semester is selected if faculty is already selected
+    $("#semester").change(function() {
+        if ($("#faculty").val() && $(this).val()) {
+            $("form").submit();
+        }
+    });
+});
+</script>
+
+<style>
+.timetable-table {
+    font-size: 14px;
+}
+.timetable-table th {
+    text-align: center;
+    vertical-align: middle !important;
+    font-weight: bold;
+}
+.time-slot {
+    background-color: #f8f9fa;
+    font-weight: bold;
+    text-align: center;
+    vertical-align: middle !important;
+}
+.timetable-cell {
+    height: 80px;
+    vertical-align: top !important;
+    position: relative;
+}
+.timetable-entry {
+    margin: 2px;
+    border-radius: 4px;
+    overflow: hidden;
+    font-size: 13px;
+    border-left: 4px solid #3c8dbc;
+    background-color: #e8f4fc;
+}
+.timetable-entry:hover {
+    background-color: #bbdefb;
+}
+.timetable-details {
+    margin-top: 3px;
+}
+.timetable-details small {
+    display: block;
+    line-height: 1.2;
+}
+.break-cell {
+    background-color: #fff3cd;
+    text-align: center;
+    vertical-align: middle !important;
+}
+.break-entry {
+    color: #856404;
+    font-style: italic;
+}
+.bg-gradient-navy {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%) !important;
+}
+.bg-lightblue {
+    background-color: #e3f2fd !important;
+}
+</style>
+{% endblock custom_js %}

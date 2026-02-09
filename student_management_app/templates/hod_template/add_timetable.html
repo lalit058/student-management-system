@@ -1,0 +1,310 @@
+{% extends 'hod_template/base_template.html' %}
+{% load static %}
+
+{% block page_title %}
+Add Timetable Entry
+{% endblock page_title %}
+
+{% block main_content %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">Add Timetable Entry</h3>
+                    </div>
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="card-body">
+                            <!-- Debug Info -->
+                            <div class="alert alert-info">
+                                Data Counts:<br>
+                                Faculties: {{ faculties|length }}<br>
+                                Semesters: {{ semesters|length }}<br>
+                                Staff: {{ staffs|length }}<br>
+                                Subjects: {{ subjects|length }}
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Faculty</label>
+                                        <select class="form-control" name="faculty" id="faculty" required>
+                                            <option value="">Select Faculty</option>
+                                            {% for faculty in faculties %}
+                                            <option value="{{ faculty.id }}">{{ faculty.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Semester</label>
+                                        <select class="form-control" name="semester" id="semester" required>
+                                            <option value="">Select Semester</option>
+                                            {% for semester in semesters %}
+                                            <option value="{{ semester.id }}">{{ semester.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Subject</label>
+                                        <select class="form-control" name="subject" id="subject" required>
+                                            <option value="">Select Subject</option>
+                                            {% for subject in subjects %}
+                                            <option value="{{ subject.id }}">{{ subject.subject_name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Teacher</label>
+                                        <select class="form-control" name="staff" id="staff" required>
+                                            <option value="">Select Teacher</option>
+                                            {% for staff in staffs %}
+                                            <option value="{{ staff.id }}">{{ staff.admin.get_full_name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Day</label>
+                                        <select class="form-control" name="day" id="day" required>
+                                            <option value="">Select Day</option>
+                                            {% for day in days %}
+                                            <option value="{{ day }}">{{ day }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Start Date</label>
+                                        <input type="date" class="form-control" name="start_date" id="start_date" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>End Date</label>
+                                        <input type="date" class="form-control" name="end_date" id="end_date" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Repeat Weekly For</label>
+                                        <select class="form-control" name="repeat_weeks" id="repeat_weeks">
+                                            <option value="1">1 week</option>
+                                            <option value="2">2 weeks</option>
+                                            <option value="4">4 weeks</option>
+                                            <option value="8">8 weeks</option>
+                                            <option value="12">12 weeks</option>
+                                            <option value="0">Until end date</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Start Time</label>
+                                        <input type="time" class="form-control" name="start_time" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>End Time</label>
+                                        <input type="time" class="form-control" name="end_time" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Duration (minutes)</label>
+                                        <input type="number" class="form-control" name="duration" id="duration" value="60" min="15" step="15">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Room Number</label>
+                                        <input type="text" class="form-control" name="room_number" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>
+                                            <input type="checkbox" name="is_lab"> Is this a Lab session?
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label>Generated Dates</label>
+                                        <div id="generated_dates" class="form-control" style="height: auto; min-height: 100px; overflow-y: auto;">
+                                            <!-- Dates will be generated here -->
+                                        </div>
+                                        <input type="hidden" name="selected_dates" id="selected_dates">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <button type="button" id="preview_dates" class="btn btn-info">Preview Dates</button>
+                            <button type="submit" class="btn btn-primary">Save Entry</button>
+                            <a href="{% url 'manage_timetable' %}" class="btn btn-default float-right">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock main_content %}
+
+{% block custom_js %}
+<script>
+$(document).ready(function() {
+    console.log("Document ready - checking dropdowns");
+    
+    // Simple check if select elements have options
+    $('#faculty').html() && console.log("Faculty options:", $('#faculty').html());
+    $('#semester').html() && console.log("Semester options:", $('#semester').html());
+    $('#subject').html() && console.log("Subject options:", $('#subject').html());
+    $('#staff').html() && console.log("Staff options:", $('#staff').html());
+    
+    // Date generation functionality
+    $('#preview_dates').click(function() {
+        generateDates();
+    });
+    
+    function generateDates() {
+        const day = $('#day').val();
+        const startDate = new Date($('#start_date').val());
+        const endDate = new Date($('#end_date').val());
+        const repeatWeeks = parseInt($('#repeat_weeks').val());
+        
+        if (!day || !$('#start_date').val() || !$('#end_date').val()) {
+            alert('Please select day, start date and end date');
+            return;
+        }
+        
+        // Calculate end date based on repeat weeks if not "Until end date"
+        let calculatedEndDate = endDate;
+        if (repeatWeeks > 0) {
+            calculatedEndDate = new Date(startDate);
+            calculatedEndDate.setDate(startDate.getDate() + (repeatWeeks * 7));
+        }
+        
+        // Find all dates for the selected day between start and end dates
+        let dates = [];
+        let currentDate = new Date(startDate);
+        
+        // Find first occurrence of selected day
+        while (currentDate.getDay() !== getDayNumber(day) && currentDate <= calculatedEndDate) {
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+        
+        // Collect all dates for the selected day
+        while (currentDate <= calculatedEndDate) {
+            dates.push(new Date(currentDate));
+            currentDate.setDate(currentDate.getDate() + 7); // Move to next week
+        }
+        
+        // Display dates
+        let datesHtml = '';
+        dates.forEach(date => {
+            const dateStr = formatDate(date);
+            datesHtml += `
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input date-checkbox" 
+                           id="date_${dateStr}" value="${dateStr}" checked>
+                    <label class="form-check-label" for="date_${dateStr}">
+                        ${dateStr} (${day})
+                    </label>
+                    <input type="date" class="form-control date-edit" 
+                           value="${dateStr}" style="display: none; width: 120px; display: inline-block;">
+                    <button type="button" class="btn btn-sm btn-outline-secondary edit-date-btn">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                </div>
+            `;
+        });
+        
+        $('#generated_dates').html(datesHtml || 'No dates found for the selected criteria');
+        
+        // Set up edit buttons
+        $('.edit-date-btn').click(function() {
+            const container = $(this).parent();
+            const checkbox = container.find('.date-checkbox');
+            const dateInput = container.find('.date-edit');
+            
+            if (dateInput.is(':visible')) {
+                // Save changes
+                const newDate = dateInput.val();
+                checkbox.val(newDate);
+                container.find('label').text(newDate + ' (' + day + ')');
+                dateInput.hide();
+                $(this).html('<i class="fas fa-edit"></i>');
+            } else {
+                // Show edit field
+                dateInput.show();
+                $(this).html('<i class="fas fa-save"></i>');
+            }
+        });
+        
+        // Update hidden field with selected dates
+        updateSelectedDates();
+        $('.date-checkbox').change(updateSelectedDates);
+    }
+    
+    function updateSelectedDates() {
+        const selectedDates = [];
+        $('.date-checkbox:checked').each(function() {
+            selectedDates.push($(this).val());
+        });
+        $('#selected_dates').val(selectedDates.join(','));
+    }
+    
+    function getDayNumber(dayName) {
+        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        return days.indexOf(dayName);
+    }
+    
+    function formatDate(date) {
+        const d = new Date(date);
+        let month = '' + (d.getMonth() + 1);
+        let day = '' + d.getDate();
+        const year = d.getFullYear();
+        
+        if (month.length < 2) month = '0' + month;
+        if (day.length < 2) day = '0' + day;
+        
+        return [year, month, day].join('-');
+    }
+    
+    // Set default dates (today and +1 week)
+    const today = new Date();
+    const nextWeek = new Date();
+    nextWeek.setDate(today.getDate() + 7);
+    
+    $('#start_date').val(formatDate(today));
+    $('#end_date').val(formatDate(nextWeek));
+});
+</script>
+{% endblock custom_js %}

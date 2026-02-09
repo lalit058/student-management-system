@@ -223,19 +223,21 @@ Send Notification Student
             },
             success: function(response) {
                 if(response == "True") {
-                    alert("Notification sent successfully!");
-                    $("#notificationModal").modal('hide');
-                    $("#notification_message").val(''); // Clear the message
+                    btn.html('<i class="fas fa-check"></i> Success');
+                    setTimeout(function() {
+                        alert("Notification sent successfully!");
+                        $("#notificationModal").modal('hide');
+                        $("#notification_message").val(''); // Clear the message
+                        btn.prop('disabled', false).html('<i class="fas fa-paper-plane mr-1"></i> Send');
+                    }, 1000);
                 } else {
                     alert("Error sending notification");
+                    btn.prop('disabled', false).html('<i class="fas fa-paper-plane mr-1"></i> Send');
                 }
             },
             error: function(xhr, status, error) {
                 alert("Error sending notification: " + error);
                 console.error("Error details:", xhr.responseText);
-            },
-            complete: function() {
-                // Re-enable button
                 btn.prop('disabled', false).html('<i class="fas fa-paper-plane mr-1"></i> Send');
             }
         });

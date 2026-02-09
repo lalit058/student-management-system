@@ -1,0 +1,163 @@
+{% extends 'hod_template/base_template.html' %}
+{% load static %}
+
+{% block page_title %}
+Edit Timetable Entry
+{% endblock page_title %}
+
+{% block main_content %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">Edit Timetable Entry</h3>
+                    </div>
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Faculty</label>
+                                        <select class="form-control select2" name="faculty" id="faculty" required>
+                                            <option value="{{ timetable.semester.faculty.id }}" selected>{{ timetable.semester.faculty.name }}</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Semester</label>
+                                        <select class="form-control select2" name="semester" id="semester" required>
+                                            <option value="{{ timetable.semester.id }}" selected>{{ timetable.semester.name }}</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Subject</label>
+                                        <select class="form-control select2" name="subject" id="subject" required>
+                                            <option value="{{ timetable.subject.id }}" selected>{{ timetable.subject.subject_name }}</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Teacher</label>
+                                        <select class="form-control select2" name="staff" id="staff" required>
+                                            <option value="{{ timetable.staff.id }}" selected>{{ timetable.staff.admin.get_full_name }}</option>
+                                            {% for staff in staffs %}
+                                            <option value="{{ staff.id }}">{{ staff.admin.get_full_name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Day</label>
+                                        <select class="form-control select2" name="day" required>
+                                            {% for day in days %}
+                                            <option value="{{ day }}" {% if day == timetable.day %}selected{% endif %}>{{ day }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Start Time</label>
+                                        <input type="time" class="form-control" name="start_time" value="{{ timetable.start_time|time:'H:i' }}" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>End Time</label>
+                                        <input type="time" class="form-control" name="end_time" value="{{ timetable.end_time|time:'H:i' }}" required>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Room Number</label>
+                                        <input type="text" class="form-control" name="room_number" value="{{ timetable.room_number }}" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>
+                                            <input type="checkbox" name="is_lab" {% if timetable.is_lab %}checked{% endif %}> Is this a Lab session?
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <button type="submit" class="btn btn-primary">Update Entry</button>
+                            <a href="{% url 'manage_timetable' %}" class="btn btn-default float-right">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock main_content %}
+
+{% block custom_js %}
+<script>
+$(document).ready(function() {
+    $('.select2').select2();
+    
+    // Faculty change event
+    $("#faculty").change(function() {
+        var faculty_id = $(this).val();
+        if (faculty_id) {
+            $.ajax({
+                url: "{% url 'get_semesters' %}",
+                data: {
+                    'faculty_id': faculty_id
+                },
+                success: function(data) {
+                    $("#semester").html('<option value="">Select Semester</option>');
+                    $.each(data, function(key, value) {
+                        $("#semester").append('<option value="' + value.id + '">' + value.name + '</option>');
+                    });
+                }
+            });
+        } else {
+            $("#semester").html('<option value="">Select Semester</option>');
+            $("#subject").html('<option value="">Select Subject</option>');
+        }
+    });
+    
+    // Semester change event
+    $("#semester").change(function() {
+        var semester_id = $(this).val();
+        if (semester_id) {
+            $.ajax({
+                url: "{% url 'get_subjects' %}",
+                data: {
+                    'semester_id': semester_id
+                },
+                success: function(data) {
+                    $("#subject").html('<option value="">Select Subject</option>');
+                    $.each(data, function(key, value) {
+                        $("#subject").append('<option value="' + value.id + '">' + value.subject_name + '</option>');
+                    });
+                }
+            });
+        } else {
+            $("#subject").html('<option value="">Select Subject</option>');
+        }
+    });
+});
+</script>
+{% endblock custom_js %}

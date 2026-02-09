@@ -19,6 +19,38 @@ class SessionYearModel(models.Model):
         return f"{self.session_start_year} to {self.session_end_year}"
 
 
+# Faculty model
+class Faculty(models.Model):
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=100, unique=True)
+    description = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    objects = models.Manager()
+    
+    def __str__(self):
+        return self.name
+
+
+# Semester model
+class Semester(models.Model):
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=50)
+    faculty = models.ForeignKey(Faculty, on_delete=models.CASCADE, related_name='semesters')
+    start_date = models.DateField()
+    end_date = models.DateField()
+    is_active = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    objects = models.Manager()
+    
+    class Meta:
+        unique_together = ('name', 'faculty')
+    
+    def __str__(self):
+        return f"{self.name} - {self.faculty.name}"
+
+
 # Custom user model
 class CustomUser(AbstractUser):
     # your custom fields here
@@ -26,6 +58,7 @@ class CustomUser(AbstractUser):
     user_type = models.CharField(default=1, choices=user_type_data, max_length=10)
 
 
+# Admin model
 class AdminHOD(models.Model):
     admin = models.OneToOneField(CustomUser, on_delete=models.CASCADE, primary_key=True)
     address = models.TextField(blank=True, null=True)
@@ -36,9 +69,12 @@ class AdminHOD(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     objects = models.Manager()
-    def _str_(self):
+    
+    def __str__(self):
         return f"{self.admin.username} (Admin)"
 
+
+# Staff model
 class Staffs(models.Model):
     id = models.AutoField(primary_key=True)
     admin = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='staff')
@@ -49,6 +85,7 @@ class Staffs(models.Model):
     gender=models.CharField(max_length=255, blank=True, null=True)
     years_of_experience = models.PositiveIntegerField(default=0)
     joining_date = models.DateField(null=True, blank=True)
+    faculty = models.ForeignKey(Faculty, on_delete=models.SET_NULL, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     fcm_token = models.TextField(null=True, blank=True)
@@ -63,11 +100,16 @@ class Staffs(models.Model):
             name_parts.append(self.admin.last_name)
         return ' '.join(name_parts)
     
+    def __str__(self):
+        return self.full_name
 
 
+# Courses model
 class Courses(models.Model):
     id = models.AutoField(primary_key=True)
-    course_name = models.CharField(max_length=255, default="Unknown Course")  # ✅ Default added
+    course_name = models.CharField(max_length=255, default="Unknown Course")
+    faculty = models.ForeignKey(Faculty, on_delete=models.CASCADE)
+    duration_years = models.PositiveIntegerField(default=4)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     staff = models.ForeignKey(Staffs, on_delete=models.SET_NULL, null=True, blank=True)
@@ -75,21 +117,66 @@ class Courses(models.Model):
     objects = models.Manager()
     
     def __str__(self):
-        return self.course_name
+        return f"{self.course_name} ({self.faculty.name})"
 
 
+# Subjects model
 class Subjects(models.Model):
     id = models.AutoField(primary_key=True)
-    subject_name = models.CharField(max_length=100, default="Unknown Subject")  # ✅ Default added
+    subject_name = models.CharField(max_length=100, default="Unknown Subject")
+    faculty = models.ForeignKey(Faculty, on_delete=models.CASCADE)
     course_id = models.ForeignKey(Courses, on_delete=models.CASCADE)
+    semester = models.ForeignKey(Semester, on_delete=models.CASCADE, related_name='subjects')
     internal_full_marks = models.FloatField(default=20)  # Default assignment marks
     exam_full_marks = models.FloatField(default=80)  
     staff_id = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    credit_hours = models.PositiveIntegerField(default=3)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     objects = models.Manager()
+    
+    def __str__(self):
+        return f"{self.subject_name} - {self.semester.name}"
 
 
+# TimeTable model
+class TimeTable(models.Model):
+    DAY_CHOICES = [
+        ('Sunday', 'Sunday'),
+        ('Monday', 'Monday'),
+        ('Tuesday', 'Tuesday'),
+        ('Wednesday', 'Wednesday'),
+        ('Thursday', 'Thursday'),
+        ('Friday', 'Friday'),
+        ('Saturday', 'Saturday'),
+    ]
+    
+    id = models.AutoField(primary_key=True)
+    faculty = models.ForeignKey(Faculty, on_delete=models.CASCADE, related_name='timetables')
+    semester = models.ForeignKey(Semester, on_delete=models.CASCADE, related_name='timetables')
+    subject = models.ForeignKey(Subjects, on_delete=models.CASCADE)
+    staff = models.ForeignKey(Staffs, on_delete=models.CASCADE)
+    day = models.CharField(max_length=10, choices=DAY_CHOICES)
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+    room_number = models.CharField(max_length=20)
+    is_lab = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    objects = models.Manager()
+    
+    class Meta:
+        unique_together = ('semester', 'day', 'start_time', 'room_number')
+        ordering = ['day', 'start_time']
+    
+    def __str__(self):
+        return f"{self.subject.subject_name} - {self.day} {self.start_time}-{self.end_time}"
+    
+    def get_duration(self):
+        return f"{self.start_time.strftime('%H:%M')} - {self.end_time.strftime('%H:%M')}"
+
+
+# Students model
 class Students(models.Model):
     id=models.AutoField(primary_key=True)
     admin=models.OneToOneField(CustomUser,on_delete=models.CASCADE)
@@ -104,26 +191,32 @@ class Students(models.Model):
         help_text="Unique numeric roll number for the student")
     address=models.TextField()
     course_id=models.ForeignKey(Courses,on_delete=models.DO_NOTHING)
+    semester = models.ForeignKey(Semester, on_delete=models.SET_NULL, null=True, blank=True)
     session_year_id=models.ForeignKey(SessionYearModel,on_delete=models.CASCADE, related_name='students')
     created_at=models.DateTimeField(auto_now_add=True)
-    
     updated_at=models.DateTimeField(auto_now_add=True)
     fcm_token=models.TextField(default="")
     objects = models.Manager()
-    # In your Students model
-def get_unread_notification_count(self):
-    return NotificationStudent.objects.filter(student_id=self, is_read=False).count()
-    def _str_(self):
+    
+    def get_unread_notification_count(self):
+        return NotificationStudent.objects.filter(student_id=self, is_read=False).count()
+    
+    def __str__(self):
         # Display student's full name from related CustomUser model
         return self.admin.get_full_name() or self.admin.username
+    
+    def get_current_semester(self):
+        return self.semester or self.course_id.semester_set.first()
 
+
+# Parents model
 class Parents(models.Model):
     id = models.AutoField(primary_key=True)
     admin = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     profile_pic = models.ImageField(upload_to='profile_pics/', default='profile_pics/default.jpg', blank=True, null=True)
     email = models.EmailField(max_length=255, unique=True)
-    phone_number = models.BigIntegerField(  # Add this field
+    phone_number = models.BigIntegerField(
         null=True,
         blank=True,
         validators=[
@@ -144,26 +237,28 @@ class Parents(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     objects = models.Manager()
 
-    def _str_(self):
+    def __str__(self):
         return f"{self.name} ({self.relationship} of {self.student_id.admin.get_full_name()})"
+    
     def get_unread_notification_count(self):
         return self.notificationparents_set.filter(is_read=False).count()
-    
 
+
+# Attendance model
 class Attendance(models.Model):
     id = models.AutoField(primary_key=True)
     subject_id = models.ForeignKey(Subjects, on_delete=models.CASCADE)
-    attendance_date = models.DateTimeField()  # Remove default, handle in save()
+    attendance_date = models.DateTimeField()
     session_year_id = models.ForeignKey(SessionYearModel, on_delete=models.CASCADE)
+    semester = models.ForeignKey(Semester, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     objects = models.Manager()
     
     class Meta:
-        unique_together = ('subject_id', 'attendance_date', 'session_year_id')
+        unique_together = ('subject_id', 'attendance_date', 'session_year_id', 'semester')
     
     def save(self, *args, **kwargs):
-        # Ensure TIME_ZONE = 'Asia/Kathmandu' is set in settings.py
         if not self.attendance_date:
             self.attendance_date = timezone.now()
         elif not timezone.is_aware(self.attendance_date):
@@ -171,6 +266,7 @@ class Attendance(models.Model):
         super().save(*args, **kwargs)
 
 
+# Attendance report model
 class AttendanceReport(models.Model):
     id = models.AutoField(primary_key=True)
     student_id = models.ForeignKey(Students, on_delete=models.DO_NOTHING, related_name='attendance_reports')
@@ -181,6 +277,7 @@ class AttendanceReport(models.Model):
     objects = models.Manager()
 
 
+# Leave report for student model
 class LeaveReportStudent(models.Model):
     id = models.AutoField(primary_key=True)
     student_id = models.ForeignKey(Students, on_delete=models.CASCADE)
@@ -192,6 +289,7 @@ class LeaveReportStudent(models.Model):
     objects = models.Manager()
 
 
+# Leave report for staff model
 class LeaveReportStaff(models.Model):
     id = models.AutoField(primary_key=True)
     staff_id = models.ForeignKey(Staffs, on_delete=models.CASCADE)
@@ -203,6 +301,7 @@ class LeaveReportStaff(models.Model):
     objects = models.Manager()
 
 
+# Feedback for student model
 class FeedBackStudent(models.Model):
     id = models.AutoField(primary_key=True)
     student_id = models.ForeignKey(Students, on_delete=models.CASCADE)
@@ -213,6 +312,7 @@ class FeedBackStudent(models.Model):
     objects = models.Manager()
 
 
+# Feedback for staff model
 class FeedBackStaffs(models.Model):
     id = models.AutoField(primary_key=True)
     staff_id = models.ForeignKey(Staffs, on_delete=models.CASCADE)
@@ -222,6 +322,8 @@ class FeedBackStaffs(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     objects = models.Manager()
 
+
+# Feedback for parents model
 class FeedBackParents(models.Model):
     id = models.AutoField(primary_key=True)
     parent_id = models.ForeignKey(Parents, on_delete=models.CASCADE)
@@ -230,6 +332,7 @@ class FeedBackParents(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     objects = models.Manager()
+
 
 class Notification(models.Model):
     NOTIFICATION_TYPES = (
@@ -249,10 +352,11 @@ class Notification(models.Model):
     class Meta:
         ordering = ['-created_at']
     
-    def _str_(self):
+    def __str__(self):
         return f"Notification from {self.sender.username} to {self.receiver.username}"
-    
 
+
+# Notification for student model
 class NotificationStudent(models.Model):
     id = models.AutoField(primary_key=True)
     student_id = models.ForeignKey(Students, on_delete=models.CASCADE)
@@ -263,12 +367,12 @@ class NotificationStudent(models.Model):
     read_status = models.BooleanField(default=False)
     admin_id = models.ForeignKey(AdminHOD, on_delete=models.CASCADE, null=True)
     objects = models.Manager()
+    
     def __str__(self):
         return self.message
-    def __str__(self):
-        return f"Notification for {self.student_id.admin.username}"
 
 
+# Notification for staff model
 class NotificationStaffs(models.Model):
     id = models.AutoField(primary_key=True)
     staff = models.ForeignKey(Staffs, on_delete=models.CASCADE)
@@ -278,24 +382,31 @@ class NotificationStaffs(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     is_read = models.BooleanField(default=False)
     objects = models.Manager()
+    
     def __str__(self):
         return f"Notification for {self.staff.admin.username}"
+    
     @property
     def sender(self):
         return self.admin or self.staff.admin if self.staff else None
 
+
+# Notification for parents model
 class NotificationParents(models.Model):
     id = models.AutoField(primary_key=True)
     parent_id = models.ForeignKey(Parents, on_delete=models.CASCADE)
     message = models.TextField()
-    is_read = models.BooleanField(default=False)  # New field to track read status
+    is_read = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     objects = models.Manager()
+    
     @property
     def unread_notification_count(self):
         return self.notificationparents_set.filter(is_read=False).count()
-    
+
+
+# Result for student model
 class StudentResult(models.Model):
     student_id = models.ForeignKey(Students, on_delete=models.CASCADE)
     subject_id = models.ForeignKey(Subjects, on_delete=models.CASCADE)
@@ -303,10 +414,10 @@ class StudentResult(models.Model):
     subject_assignment_marks = models.FloatField(default=0)
     subject_internal_full_marks = models.FloatField(default=0)
     subject_exam_full_marks = models.FloatField(default=0)
+    semester = models.ForeignKey(Semester, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    # Add these methods inside the class
     def get_total_marks(self):
         """Calculate total marks by adding assignment and exam marks"""
         return (self.subject_assignment_marks or 0) + (self.subject_exam_marks or 0)
@@ -320,19 +431,11 @@ class StudentResult(models.Model):
         elif total >= 60: return 'D'
         else: return 'F'
 
-    def _str_(self):
+    def __str__(self):
         return f"{self.student_id.admin.username} - {self.subject_id.subject_name}"
 
     class Meta:
-        unique_together = ('student_id', 'subject_id')
-        
-def get_grade(self):
-    total = self.get_total_marks()
-    if total >= 90: return 'A'
-    elif total >= 80: return 'B'
-    elif total >= 70: return 'C'
-    elif total >= 60: return 'D'
-    else: return 'F'
+        unique_together = ('student_id', 'subject_id', 'semester')
 
 
 @receiver(post_save, sender=CustomUser)
@@ -349,7 +452,8 @@ def create_user_profile(sender, instance, created, **kwargs):
                 session_year_id=SessionYearModel.objects.first(),  # Safely get first session
                 address="",
                 profile_pic=None,
-                gender=""
+                gender="",
+                semester=Semester.objects.first()  # Assign first semester
             )
         elif instance.user_type == '4':
             Parents.objects.create(
@@ -360,7 +464,7 @@ def create_user_profile(sender, instance, created, **kwargs):
                 address="",
                 student_id=None,
                 relationship="Parent",
-                profile_pic=None  # fix: don't pass an invalid empty string
+                profile_pic=None
             )
 
 

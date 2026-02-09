@@ -3,69 +3,140 @@
 Add Subject
 {% endblock page_title %}
 {% block main_content %}
-    <!-- Main content -->
-    <section class="content">
-      <div class="container-fluid">
-          <div class="row">
-              <div class="col-md-12">
-            <!-- general form elements -->
-            <div class="card card-primary">
-              <div class="card-header">
-                <h3 class="card-title">Add Subject</h3>
+<!-- Main content -->
+<section class="content">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-md-12">
+        <!-- general form elements -->
+        <div class="card card-primary">
+          <div class="card-header">
+            <h3 class="card-title">Add Subject</h3>
+          </div>
+          <!-- /.card-header -->
+          <!-- form start -->
+          <form role="form" action="/add_subject_save" method="post">
+            {% csrf_token %}
+            <div class="card-body">
+              <div class="form-group">
+                <label>Subject Name</label>
+                <input type="text" class="form-control" name="subject_name" placeholder="Enter Subject" required>
               </div>
-              <!-- /.card-header -->
-              <!-- form start -->
-              <form role="form" action="/add_subject_save" method="post">
-                  {% csrf_token %}
-                <div class="card-body">
-                  <div class="form-group">
-                    <label>Subject Name </label>
-                    <input type="text" class="form-control" name="subject_name" placeholder="Enter Subject">
-                  </div>
-                   <div class="form-group">
-                    <label>Course </label>
-                    <select class="form-control" name="course">
-                        {% for course in courses %}
-                          <option value="{{ course.id }}">{{ course.course_name }}</option>
-                        {% endfor %}
-                    </select>
-                  </div>
-                  <div class="form-group">
-                    <label>Staff</label>
-                    <select class="form-control" name="staff">
-                        {% for staff in staffs %}
-                          <option value="{{ staff.id }}">{{ staff.first_name }} {{ staff.last_name }}</option>
-                        {% endfor %}
-                    </select>
-                  </div>
-                   <div class="form-group">
-                      {% if messages %}
-                        {% for message in messages %}
-                        {% if message.tags == 'error' %}
-                        <div class="alert alert-danger" style="margin-top:10px">{{ message }}</div>
-                        {% endif %}
-                        {% if message.tags == 'success' %}
-                        <div class="alert alert-success" style="margin-top:10px">{{ message }}</div>
-                        {% endif %}
-                        {% endfor %}
-                      {% endif %}
-                    </div>
-
-                </div>
-                <!-- /.card-body -->
-
-                <div class="card-footer">
-                  <button type="submit" class="btn btn-primary btn-block">Add Subject</button>
-                </div>
-              </form>
+              <div class="form-group">
+                <label>Faculty</label>
+                <select class="form-control select2" id="faculty" name="faculty" required>
+                  <option value="">Select Faculty</option>
+                  {% for faculty in faculties %}
+                  <option value="{{ faculty.id }}">{{ faculty.name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Semester</label>
+                <select class="form-control select2" id="semester" name="semester" required>
+                  <option value="">Select Semester</option>
+                  {% for semester in semesters %}
+                  <option value="{{ semester.id }}">{{ semester.name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Course</label>
+                <select class="form-control select2" id="course" name="course" required>
+                  <option value="">Select Course</option>
+                  {% for course in courses %}
+                  <option value="{{ course.id }}">{{ course.course_name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Staff</label>
+                <select class="form-control select2" name="staff" required>
+                  <option value="">Select Staff</option>
+                  {% for staff in staffs %}
+                  <option value="{{ staff.id }}">{{ staff.admin.get_full_name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Internal Marks (Full)</label>
+                <input type="number" class="form-control" name="internal_marks" value="20" min="0" max="100" required>
+              </div>
+              <div class="form-group">
+                <label>Exam Marks (Full)</label>
+                <input type="number" class="form-control" name="exam_marks" value="80" min="0" max="100" required>
+              </div>
+              <div class="form-group">
+                <label>Credit Hours</label>
+                <input type="number" class="form-control" name="credit_hours" value="3" min="1" max="10" required>
+              </div>
+              <div class="form-group">
+                {% if messages %}
+                {% for message in messages %}
+                {% if message.tags == 'error' %}
+                <div class="alert alert-danger" style="margin-top:10px">{{ message }}</div>
+                {% endif %}
+                {% if message.tags == 'success' %}
+                <div class="alert alert-success" style="margin-top:10px">{{ message }}</div>
+                {% endif %}
+                {% endfor %}
+                {% endif %}
+              </div>
             </div>
-            <!-- /.card -->
+            <!-- /.card-body -->
 
-
-
-          </div>
-          </div>
+            <div class="card-footer">
+              <button type="submit" class="btn btn-primary btn-block">Add Subject</button>
+            </div>
+          </form>
+        </div>
+        <!-- /.card -->
       </div>
-    </section>
-    <!-- /.content -->
+    </div>
+  </div>
+</section>
+<!-- /.content -->
 {% endblock main_content %}
+
+{% block custom_js %}
+<script>
+  $(document).ready(function () {
+    $('.select2').select2();
+
+    // Faculty change event
+    $("#faculty").change(function () {
+      var faculty_id = $(this).val();
+      if (faculty_id) {
+        $.ajax({
+          url: "{% url 'get_semesters' %}",
+          data: {
+            'faculty_id': faculty_id
+          },
+          success: function (data) {
+            $("#semester").html('<option value="">Select Semester</option>');
+            $.each(data, function (key, value) {
+              $("#semester").append('<option value="' + value.id + '">' + value.name + '</option>');
+            });
+          }
+        });
+
+        $.ajax({
+          url: "{% url 'get_courses_by_faculty' %}",
+          data: {
+            'faculty_id': faculty_id
+          },
+          success: function (data) {
+            $("#course").html('<option value="">Select Course</option>');
+            $.each(data, function (key, value) {
+              $("#course").append('<option value="' + value.id + '">' + value.course_name + '</option>');
+            });
+          }
+        });
+      } else {
+        $("#semester").html('<option value="">Select Semester</option>');
+        $("#course").html('<option value="">Select Course</option>');
+      }
+    });
+  });
+</script>
+{% endblock custom_js %}

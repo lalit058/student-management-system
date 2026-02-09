@@ -31,9 +31,9 @@ Manage Admins
             <h3 class="card-title">Admin Details</h3>
             <div class="card-tools">
               <div class="input-group input-group-sm" style="width: 300px;">
-              <a href="{% url 'add_student' %}" class="btn btn-sm btn-success mr-2">
-                <i class="fas fa-plus"></i> Add Student
-              </a>
+                <a href="{% url 'add_student' %}" class="btn btn-sm btn-success mr-2">
+                  <i class="fas fa-plus"></i> Add Student
+                </a>
                 <input type="text" name="table_search" class="form-control float-right" placeholder="Search admins...">
                 <div class="input-group-append">
                   <button type="submit" class="btn btn-default">
@@ -152,37 +152,59 @@ Manage Admins
           </div>
 
           <!-- /.card-body -->
+          <!-- /.card-body -->
           <div class="card-footer clearfix">
-            <div class="float-left">
-              Showing <strong>{{ admins.start_index }}</strong> to <strong>{{ admins.end_index }}</strong> of <strong>{{
-                admins.paginator.count }}</strong> admins
-            </div>
-            <div class="float-right">
-              {% if admins.has_other_pages %}
-              <ul class="pagination pagination-sm m-0">
-                {% if admins.has_previous %}
-                <li class="page-item"><a class="page-link" href="?page=1">&laquo; First</a></li>
-                <li class="page-item"><a class="page-link" href="?page={{ admins.previous_page_number }}">Previous</a>
-                </li>
-                {% endif %}
+  <div class="float-left">
+    Showing <strong>{{ admins.start_index }}</strong> to <strong>{{ admins.end_index }}</strong> of 
+    <strong>{{ admins.paginator.count }}</strong> admins
+  </div>
+  
+  <!-- Debug output (remove in production) -->
+  <div style="display:none;">
+    Debug Info:<br>
+    Start Index: {{ admins.start_index }}<br>
+    End Index: {{ admins.end_index }}<br>
+    Total Count: {{ admins.paginator.count }}<br>
+    Number of Pages: {{ admins.paginator.num_pages }}<br>
+    Current Page: {{ admins.number }}
+  </div>
+  
+  <div class="float-right">
+    {% if admins.has_other_pages %}
+      <ul class="pagination pagination-sm m-0">
+        {% if admins.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?page=1">&laquo; First</a>
+          </li>
+          <li class="page-item">
+            <a class="page-link" href="?page={{ admins.previous_page_number }}">Previous</a>
+          </li>
+        {% endif %}
 
-                {% for i in admins.paginator.page_range %}
-                {% if admins.number == i %}
-                <li class="page-item active"><span class="page-link">{{ i }}</span></li>
-                {% elif i > admins.number|add:'-3' and i < admins.number|add:'3' %} <li class="page-item"><a
-                    class="page-link" href="?page={{ i }}">{{ i }}</a></li>
-                  {% endif %}
-                  {% endfor %}
+        {% for i in admins.paginator.page_range %}
+          {% if admins.number == i %}
+            <li class="page-item active">
+              <span class="page-link">{{ i }}</span>
+            </li>
+          {% elif i > admins.number|add:'-3' and i < admins.number|add:'3' %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+            </li>
+          {% endif %}
+        {% endfor %}
 
-                  {% if admins.has_next %}
-                  <li class="page-item"><a class="page-link" href="?page={{ admins.next_page_number }}">Next</a></li>
-                  <li class="page-item"><a class="page-link" href="?page={{ admins.paginator.num_pages }}">Last
-                      &raquo;</a></li>
-                  {% endif %}
-              </ul>
-              {% endif %}
-            </div>
-          </div>
+        {% if admins.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ admins.next_page_number }}">Next</a>
+          </li>
+          <li class="page-item">
+            <a class="page-link" href="?page={{ admins.paginator.num_pages }}">Last &raquo;</a>
+          </li>
+        {% endif %}
+      </ul>
+    {% endif %}
+  </div>
+</div>
         </div>
         <!-- /.card -->
       </div>
@@ -225,33 +247,34 @@ Manage Admins
     font-weight: 500;
   }
 
-  .light-blue{
+  .light-blue {
     background-color: #3c8dbc !important;
   }
 
-  .second-head{
+  .second-head {
     color: #fff !important;
     font-weight: bold;
     font-size: 16px;
   }
 
   @media (max-width: 339px) {
-    .input-group{
+    .input-group {
       flex-direction: column !important;
     }
 
-    .card-header{
+    .card-header {
       flex-direction: column !important;
       grid-template-columns: 12px;
     }
   }
+
   @media (max-width: 475px) {
 
-    .card-header{
+    .card-header {
       flex-direction: column !important;
       grid-template-columns: 12px;
-      
+
     }
-}
+  }
 </style>
 {% endblock %}

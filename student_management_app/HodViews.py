@@ -12,11 +12,11 @@ from django.db import transaction, IntegrityError
 import json
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
+from django.views.decorators.http import require_GET
 import requests
 from django.db import transaction
 from django.core.paginator import Paginator
 from django.db.models import Q
-from django.template.loader import get_template
 from django.core.exceptions import ObjectDoesNotExist   
 from django.contrib import messages
 from django.utils import timezone
@@ -26,6 +26,7 @@ from django.db import transaction, IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
+from django.db import OperationalError
 from django.views.decorators.csrf import csrf_exempt
 from .models import Notification
 
@@ -40,6 +41,9 @@ from student_management_app.models import (
     AdminHOD,
     Staffs,
     Courses,
+    Faculty,
+    Semester,
+    TimeTable,
     Subjects,
     Students,
     Parents,
@@ -54,7 +58,7 @@ from student_management_app.models import (
     AttendanceReport,
     NotificationStudent,
     NotificationStaffs,
-    NotificationParents,
+    NotificationParents
 )
 
 import logging
@@ -202,9 +206,21 @@ def add_admin(request):
 
 
 def manage_admin(request):
-    admins = AdminHOD.objects.all().select_related("admin")
+    # Get the full queryset
+    admins_list = AdminHOD.objects.all().select_related("admin").order_by('admin__id')
+    
+    # Set up pagination (10 items per page)
+    paginator = Paginator(admins_list, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
     return render(
-        request, "hod_template/manage_admin_template.html", {"admins": admins}
+        request,
+        "hod_template/manage_admin_template.html",
+        {
+            "admins": page_obj,  # Pass the page object to template
+            "total_admins": paginator.count  # Optional: pass total count separately
+        }
     )
 
 
@@ -833,13 +849,27 @@ def delete_session(request, session_id):
     return redirect('manage_session')
 
 
+from django.shortcuts import render, redirect
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
+from django.urls import reverse
+from django.contrib import messages
+from django.views.decorators.csrf import csrf_exempt
+from .models import CustomUser, Staffs, Courses, Subjects, Faculty, Semester
+
 def add_subject(request):
+    faculties = Faculty.objects.all()
+    semesters = Semester.objects.all()
     courses = Courses.objects.all()
-    staffs = CustomUser.objects.filter(user_type=2)
+    staffs = Staffs.objects.all()
     return render(
         request,
         "hod_template/add_subject_template.html",
-        {"staffs": staffs, "courses": courses},
+        {
+            "staffs": staffs,
+            "faculties": faculties,
+            "semesters": semesters,
+            "courses": courses
+        },
     )
 
 
@@ -848,48 +878,68 @@ def add_subject_save(request):
         return HttpResponse("<h2>Method Not Allowed</h2>", status=405)
     
     subject_name = request.POST.get("subject_name")
+    faculty_id = request.POST.get("faculty")
+    semester_id = request.POST.get("semester")
     course_id = request.POST.get("course")
     staff_id = request.POST.get("staff")
+    internal_marks = request.POST.get("internal_marks", 20)
+    exam_marks = request.POST.get("exam_marks", 80)
+    credit_hours = request.POST.get("credit_hours", 3)
 
     # Basic validation
-    if not all([subject_name, course_id, staff_id]):
+    if not all([subject_name, faculty_id, semester_id, course_id, staff_id]):
         messages.error(request, "All fields are required")
         return HttpResponseRedirect(reverse("add_subject"))
 
     try:
+        faculty = Faculty.objects.get(id=faculty_id)
+        semester = Semester.objects.get(id=semester_id)
         course = Courses.objects.get(id=course_id)
-        staff = CustomUser.objects.get(id=staff_id)
+        staff = Staffs.objects.get(id=staff_id)
 
-        # Check if subject already exists for this course
-        if Subjects.objects.filter(subject_name=subject_name, course_id=course).exists():
-            messages.error(request, f"Subject '{subject_name}' already exists for this course")
-            return HttpResponseRedirect(reverse("add_subject"))
-
-        # Check if staff is already assigned to this subject in any course
-        if Subjects.objects.filter(subject_name=subject_name, staff_id=staff).exists():
-            messages.error(request, f"This staff is already assigned to subject '{subject_name}'")
+        # Check if subject already exists for this course and semester
+        if Subjects.objects.filter(
+            subject_name=subject_name, 
+            course_id=course,  
+            semester=semester  
+        ).exists():
+            messages.error(request, f"Subject '{subject_name}' already exists for this course and semester")
             return HttpResponseRedirect(reverse("add_subject"))
 
         # Create new subject
         subject = Subjects(
             subject_name=subject_name,
-            course_id=course,
-            staff_id=staff
+            faculty=faculty,  
+            course_id=course,  
+            semester=semester,  
+            staff_id=staff.admin,  
+            internal_full_marks=internal_marks,
+            exam_full_marks=exam_marks,
+            credit_hours=credit_hours
         )
         subject.save()
         
         messages.success(request, "Successfully Added Subject")
-        return HttpResponseRedirect(reverse("add_subject"))
+        return HttpResponseRedirect(reverse("manage_subject"))
 
+    except Faculty.DoesNotExist:
+        messages.error(request, "Selected faculty does not exist")
+    except Semester.DoesNotExist:
+        messages.error(request, "Selected semester does not exist")
     except Courses.DoesNotExist:
         messages.error(request, "Selected course does not exist")
-    except CustomUser.DoesNotExist:
+    except Staffs.DoesNotExist:
         messages.error(request, "Selected staff does not exist")
     except Exception as e:
         messages.error(request, f"Failed to Add Subject: {str(e)}")
     
     return HttpResponseRedirect(reverse("add_subject"))
 
+@csrf_exempt
+def get_courses_by_faculty(request):
+    faculty_id = request.GET.get('faculty_id')
+    courses = Courses.objects.filter(faculty_id=faculty_id).values('id', 'course_name')
+    return JsonResponse(list(courses), safe=False)
 
 def manage_staff(request):
     staffs = Staffs.objects.all().select_related("admin")
@@ -2175,3 +2225,344 @@ def get_unread_count(request):
         return JsonResponse({'status': 'success', 'count': count})
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+
+# Timetable management
+def manage_timetable(request):
+    faculties = Faculty.objects.all()
+    semesters = Semester.objects.all()
+    timetable_data = []
+    days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI']  # Use short names
+    
+    selected_faculty = request.GET.get('faculty', '')
+    selected_semester_id = request.GET.get('semester', '')
+    
+    if selected_faculty:
+        semesters = Semester.objects.filter(faculty_id=selected_faculty)
+    
+    if selected_semester_id:
+        # Get all timetable entries for the selected semester
+        timetable_entries = TimeTable.objects.filter(semester_id=selected_semester_id)
+        
+        for entry in timetable_entries:
+            # Format time slot to match the template exactly
+            start_time = entry.start_time.strftime('%H:%M') if entry.start_time else ''
+            end_time = entry.end_time.strftime('%H:%M') if entry.end_time else ''
+            
+            # Create the time slot in the exact format used in the template
+            time_slot = f"{start_time}-{end_time}"
+            
+            # Map full day names to short day names
+            day_mapping = {
+                'Sunday': 'SUN',
+                'Monday': 'MON',
+                'Tuesday': 'TUE', 
+                'Wednesday': 'WED',
+                'Thursday': 'THU',
+                'Friday': 'FRI',
+                'Saturday': 'SAT'
+            }
+            
+            # Get the short day name
+            short_day = day_mapping.get(entry.day, entry.day)
+            
+            timetable_data.append({
+                'id': entry.id,
+                'subject': entry.subject,
+                'staff': entry.staff,
+                'day': short_day,  # Use the short day name
+                'time_slot': time_slot,
+                'room_number': entry.room_number,
+                'is_lab': entry.is_lab
+            })
+    
+    context = {
+        'faculties': faculties,
+        'semesters': semesters,
+        'timetable_data': timetable_data,
+        'days': days,  # This now matches template expectations
+        'selected_faculty': selected_faculty,
+        'selected_semester': selected_semester_id
+    }
+    return render(request, 'hod_template/timetable.html', context)
+
+
+from django.db.models import Q
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.core.exceptions import ObjectDoesNotExist
+from student_management_app.models import Faculty, Semester, Subjects, Staffs, TimeTable
+from datetime import time
+import logging
+
+logger = logging.getLogger(__name__)
+
+def add_timetable(request):
+    if request.method == 'POST':
+        try:
+            # Get form data
+            faculty_id = request.POST.get('faculty')
+            semester_id = request.POST.get('semester')
+            subject_id = request.POST.get('subject')
+            staff_id = request.POST.get('staff')
+            day = request.POST.get('day')
+            start_time_str = request.POST.get('start_time')
+            end_time_str = request.POST.get('end_time')
+            room_number = request.POST.get('room_number')
+            is_lab = request.POST.get('is_lab') == 'on'
+            
+            print(f"DEBUG: Received - dept:{faculty_id}, semester:{semester_id}, subject:{subject_id}, staff:{staff_id}")
+            
+            # Validate required fields
+            required_fields = [faculty_id, semester_id, subject_id, staff_id, day, start_time_str, end_time_str, room_number]
+            if not all(required_fields):
+                messages.error(request, "All fields are required!")
+                return redirect('add_timetable')
+            
+            # Check if foreign key objects exist
+            try:
+                faculty_obj = Faculty.objects.get(id=faculty_id)  # Changed variable name
+                semester = Semester.objects.get(id=semester_id)
+                subject = Subjects.objects.get(id=subject_id)
+                staff = Staffs.objects.get(id=staff_id)
+                print("DEBUG: Foreign key objects exist")
+            except ObjectDoesNotExist:
+                messages.error(request, "Invalid selection: The selected item does not exist")
+                return redirect('add_timetable')
+            
+            # Convert time strings to time objects
+            try:
+                from datetime import datetime
+                start_time = datetime.strptime(start_time_str, '%H:%M').time()
+                end_time = datetime.strptime(end_time_str, '%H:%M').time()
+            except ValueError:
+                messages.error(request, "Invalid time format! Use HH:MM format.")
+                return redirect('add_timetable')
+            
+            # Validate time order
+            if start_time >= end_time:
+                messages.error(request, "End time must be after start time!")
+                return redirect('add_timetable')
+            
+            # Check for time conflicts
+            conflicting_entries = TimeTable.objects.filter(
+                Q(semester=semester) | Q(room_number=room_number),
+                day=day
+            ).filter(
+                Q(start_time__lt=end_time) & Q(end_time__gt=start_time)
+            )
+            
+            if conflicting_entries.exists():
+                messages.warning(request, f"Time conflict! Room {room_number} is already booked during this time!")
+                return redirect('add_timetable')
+            
+            # Create new timetable entry
+            timetable = TimeTable(
+                semester=semester,
+                subject=subject,
+                staff=staff,
+                day=day,
+                start_time=start_time,
+                end_time=end_time,
+                room_number=room_number,
+                is_lab=is_lab
+            )
+            
+            timetable.save()
+            messages.success(request, "Timetable entry added successfully!")
+            return redirect('timetable_list')
+            
+        except Exception as e:
+            messages.error(request, f"Unexpected error: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return redirect('add_timetable')
+    
+    else:
+        # GET request handling - FIXED THE VARIABLE NAME CONFLICT
+        faculties = Faculty.objects.all()  # Changed variable name to plural
+        semesters = Semester.objects.all()
+        subjects = Subjects.objects.all()
+        staffs = Staffs.objects.all()
+        
+        context = {
+            'faculties': faculties,  # Changed to match template variable
+            'semesters': semesters,
+            'subjects': subjects,
+            'staffs': staffs,
+            'days': ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+        }
+        return render(request, 'hod_template/add_timetable.html', context)
+        
+def edit_timetable(request, timetable_id):
+    timetable = TimeTable.objects.get(id=timetable_id)
+    if request.method == 'POST':
+        try:
+            timetable.semester_id = request.POST.get('semester')
+            timetable.subject_id = request.POST.get('subject')
+            timetable.staff_id = request.POST.get('staff')
+            timetable.day = request.POST.get('day')
+            timetable.start_time = request.POST.get('start_time')
+            timetable.end_time = request.POST.get('end_time')
+            timetable.room_number = request.POST.get('room_number')
+            timetable.is_lab = request.POST.get('is_lab') == 'on'
+            timetable.date = request.POST.get('date')  # Update the date if needed
+            timetable.save()
+            
+            messages.success(request, "Timetable entry updated successfully!")
+            return redirect('manage_timetable')
+        except Exception as e:
+            messages.error(request, f"Error: {str(e)}")
+            return redirect('edit_timetable', timetable_id=timetable_id)
+    
+    faculties = Faculty.objects.all()
+    semesters = Semester.objects.filter(faculty=timetable.semester.faculty)
+    subjects = Subjects.objects.filter(semester=timetable.semester)
+    staffs = Staffs.objects.all()
+    
+    context = {
+        'timetable': timetable,
+        'faculties': faculties,
+        'semesters': semesters,
+        'subjects': subjects,
+        'staffs': staffs,
+        'days': ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+    }
+    return render(request, 'hod_template/edit_timetable.html', context)
+
+
+def delete_timetable(request, timetable_id):
+    try:
+        timetable = TimeTable.objects.get(id=timetable_id)
+        timetable.delete()
+        messages.success(request, "Timetable entry deleted successfully!")
+    except Exception as e:
+        messages.error(request, f"Error: {str(e)}")
+    return redirect('manage_timetable')
+
+@csrf_exempt
+@require_GET
+def get_semesters(request):
+    faculty_id = request.GET.get('faculty_id')
+    if not faculty_id:
+        return JsonResponse([], safe=False)
+    
+    semesters = Semester.objects.filter(faculty_id=faculty_id).values('id', 'name')
+    return JsonResponse(list(semesters), safe=False)
+
+@csrf_exempt
+@require_GET
+def get_subjects(request):
+    semester_id = request.GET.get('semester_id')
+    faculty_id = request.GET.get('faculty_id')
+    if not semester_id or not faculty_id:
+        return JsonResponse([], safe=False)
+    
+    subjects = Subjects.objects.filter(
+        semester_id=semester_id,
+        faculty_id=faculty_id
+    ).values('id', 'subject_name')
+    return JsonResponse(list(subjects), safe=False)
+
+
+# Faculty Views
+def manage_faculty(request):
+    faculties = Faculty.objects.all()
+    return render(request, 'hod_template/manage_faculty.html', {'faculties': faculties})
+
+def add_faculty(request):
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        description = request.POST.get('description')
+        
+        try:
+            faculty = Faculty(name=name, description=description)
+            faculty.save()
+            messages.success(request, "Faculty added successfully!")
+            return redirect('manage_faculty')
+        except Exception as e:
+            messages.error(request, f"Error: {str(e)}")
+            return redirect('add_faculty')
+    
+    return render(request, 'hod_template/add_faculty.html')
+
+def edit_faculty(request, faculty_id):
+    faculty = Faculty.objects.get(id=faculty_id)
+    if request.method == 'POST':
+        faculty.name = request.POST.get('name')
+        faculty.description = request.POST.get('description')
+        faculty.save()
+        messages.success(request, "Faculty updated successfully!")
+        return redirect('manage_faculty')
+    
+    return render(request, 'hod_template/edit_faculty.html', {'faculty': faculty})
+
+def delete_faculty(request, faculty_id):
+    faculty = Faculty.objects.get(id=faculty_id)
+    try:
+        faculty.delete()
+        messages.success(request, "Faculty deleted successfully!")
+    except Exception as e:
+        messages.error(request, f"Error: {str(e)}")
+    return redirect('manage_faculty')
+
+# Semester Views
+def manage_semester(request):
+    semesters = Semester.objects.all()
+    return render(request, 'hod_template/manage_semester.html', {'semesters': semesters})
+
+def add_semester(request):
+    faculties = Faculty.objects.all()
+    if request.method == 'POST':
+        faculty_id = request.POST.get('faculty')
+        name = request.POST.get('name')
+        start_date = request.POST.get('start_date')
+        end_date = request.POST.get('end_date')
+        is_active = request.POST.get('is_active') == 'on'
+        
+        try:
+            semester = Semester(
+                faculty_id=faculty_id,
+                name=name,
+                start_date=start_date,
+                end_date=end_date,
+                is_active=is_active
+            )
+            semester.save()
+            messages.success(request, "Semester added successfully!")
+            return redirect('manage_semester')
+        except Exception as e:
+            messages.error(request, f"Error: {str(e)}")
+            return redirect('add_semester')
+    
+    return render(request, 'hod_template/add_semester.html', {'faculties': faculties})
+
+def edit_semester(request, semester_id):
+    semester = Semester.objects.get(id=semester_id)
+    faculties = Faculty.objects.all()
+    
+    if request.method == 'POST':
+        semester.faculty_id = request.POST.get('faculty')
+        semester.name = request.POST.get('name')
+        semester.start_date = request.POST.get('start_date')
+        semester.end_date = request.POST.get('end_date')
+        semester.is_active = request.POST.get('is_active') == 'on'
+        semester.save()
+        messages.success(request, "Semester updated successfully!")
+        return redirect('manage_semester')
+    
+    return render(request, 'hod_template/edit_semester.html', {
+        'semester': semester,
+        'faculties': faculties
+    })
+
+def delete_semester(request, semester_id):
+    semester = Semester.objects.get(id=semester_id)
+    try:
+        semester.delete()
+        messages.success(request, "Semester deleted successfully!")
+    except Exception as e:
+        messages.error(request, f"Error: {str(e)}")
+    return redirect('manage_semester')
+
+# Timetable Views (already provided in previous answer)

@@ -1,0 +1,70 @@
+{% extends 'hod_template/base_template.html' %}
+{% load static %}
+
+{% block page_title %}
+Manage Faculty
+{% endblock page_title %}
+
+{% block main_content %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">Manage Faculty</h3>
+                        <div class="card-tools">
+                            <a href="{% url 'add_faculty' %}" class="btn btn-sm btn-primary">
+                                <i class="fas fa-plus "></i> Add Faculty
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-bordered table-hover" id="example">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Faculty Name</th>
+                                    <th>Description</th>
+                                    <th>Created At</th>
+                                    <th>Updated At</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for faculty in faculties %}
+                                <tr>
+                                    <td>{{ faculty.id }}</td>
+                                    <td>{{ faculty.name }}</td>
+                                    <td>{{ faculty.description|default:"-" }}</td>
+                                    <td>{{ faculty.created_at|date:"d M Y" }}</td>
+                                    <td>{{ faculty.updated_at|date:"d M Y" }}</td>
+                                    <td>
+                                        <a href="{% url 'edit_faculty' faculty.id %}" class="btn btn-sm btn-success">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{% url 'delete_faculty' faculty.id %}" class="btn btn-sm btn-danger">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock main_content %}
+
+{% block custom_js %}
+<script>
+    $(document).ready(function() {
+        $('#example').DataTable({
+            responsive: true
+        });
+    });
+</script>
+{% endblock custom_js %}

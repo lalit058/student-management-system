@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 """
 
 import os
+#import dj_database_url
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -46,6 +47,8 @@ INSTALLED_APPS = [
     'django.contrib.sites', 
 ]
 
+SITE_ID = 1
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -58,14 +61,27 @@ MIDDLEWARE = [
     'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATICFILES_STORAGE = 'whitenoise.django.GzipManifestStaticFilesStorage'
+
+DATABASES = {
+    'default': {
+        # 'ENGINE': 'django.db.backends.sqlite3',
+        # 'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE':'django.db.backends.mysql',
+        'NAME':'student_management_db',
+        'USER':'student',
+        'PASSWORD':'Lalit@98',
+        'HOST':'localhost',
+        'PORT':'3306'
+    }
+}
 
 ROOT_URLCONF = 'student_management_system.urls'
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': ['student_management_app/templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'builtins': [
@@ -102,6 +118,9 @@ DATABASES = {
         'PORT':'3306'
     }
 }
+
+#DATABASES['default'] = dj_database_url.parse("postgresql://student_management_db_django_render_user:fxUChmVWj2YXEclQBeRzwAW5W8UEpUo8@dpg-d2fknjbe5dus73asppi0-a.oregon-postgres.render.com/student_management_db_django_render")
+
 
 
 # Password validation
@@ -143,3 +162,14 @@ USE_TZ = True
 ALLOWED_HOSTS = ['*']
 AUTH_USER_MODEL="student_management_app.CustomUser"
 AUTHENTICATION_BACKENDS=['student_management_app.EmailBackEnd.EmailBackEnd']
+
+#EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
+#EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'sent_emails')
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = '56.negilalit@gmail.com'  # Your actual Gmail
+EMAIL_HOST_PASSWORD = 'qnjg gmzz ijjq rjhs'       # Either your password OR app password
+DEFAULT_FROM_EMAIL = 'Student Management <56.negilalit@gmail.com>'

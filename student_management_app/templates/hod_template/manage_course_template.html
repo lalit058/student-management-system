@@ -77,6 +77,7 @@ Manage Courses
                     <th>Course Name</th>
                     <th>Session</th>
                     <th>Students</th>
+                    <th>Staffs</th>
                     <th>Created At</th>
                     <th>Updated At</th>
                     <th class="text-center">Actions</th>
@@ -92,6 +93,10 @@ Manage Courses
                     </td>
                     <td class="align-middle">
                       <span class="badge badge-pill badge-primary">{{ course.students_set.count }}</span>
+                    </td>
+                    <td class="align-middle">
+                      {% if course.admin.Staffs}
+                      <span class="badge badge-pill badge-primary">{{ course.admin.staffs }}</span>
                     </td>
                     <td class="align-middle">
                       <small class="text-muted">

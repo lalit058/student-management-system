@@ -2,7 +2,6 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
 from django.views.decorators.csrf import csrf_exempt
-from django.views.generic import TemplateView
 from student_management_app.HodViews import student_profile_view
 from student_management_app import views, HodViews, ParentViews, StaffViews, StudentViews
 from student_management_app.EditResultVIewClass import EditResultViewClass
@@ -10,7 +9,8 @@ from student_management_system import settings
 
 urlpatterns = [
     path('demo',views.showDemoPage),
-    path('accounts/', include('django.contrib.auth.urls')),
+    path('doLogin/',views.doLogin,name="do_login"),
+    path('accounts/',include('django.contrib.auth.urls')),
     path('signup_admin',views.signup_admin,name="signup_admin"),
     path('signup_student',views.signup_student,name="signup_student"),
     path('signup_staff',views.signup_staff,name="signup_staff"),
@@ -18,13 +18,38 @@ urlpatterns = [
     path('do_staff_signup',views.do_staff_signup,name="do_staff_signup"),
     path('do_signup_student',views.do_signup_student,name="do_signup_student"),
     path('admin/', admin.site.urls),
-    path('accounts/',include('django.contrib.auth.urls')),
     path('',views.ShowLoginPage,name="show_login"),
     path('get_user_details', views.GetUserDetails),
     path('logout_user', views.logout_user,name="logout"),
-    path('doLogin/',views.doLogin,name="do_login"),
     path('manage_admin/', HodViews.manage_admin, name='manage_admin'),
     path('admin_home/',HodViews.admin_home,name="admin_home"),
+    
+    path('manage_timetable/', HodViews.manage_timetable, name='manage_timetable'),
+    path('add_timetable/', HodViews.add_timetable, name='add_timetable'),
+    path('edit_timetable/<int:timetable_id>/', HodViews.edit_timetable, name='edit_timetable'),
+    path('delete_timetable/<int:timetable_id>/', HodViews.delete_timetable, name='delete_timetable'),
+    path('get_semesters/', HodViews.get_semesters, name='get_semesters'),
+    path('get_courses/', HodViews.get_courses_by_faculty, name='get_courses_by_faculty'),
+    
+    path('manage_faculty/', HodViews.manage_faculty, name='manage_faculty'),
+    path('add_faculty/', HodViews.add_faculty, name='add_faculty'),
+    path('edit_faculty/<int:faculty_id>/', HodViews.edit_faculty, name='edit_faculty'),
+    path('delete_faculty/<int:faculty_id>/', HodViews.delete_faculty, name='delete_faculty'),
+    
+    # Semester URLs
+    path('manage_semester/', HodViews.manage_semester, name='manage_semester'),
+    path('add_semester/', HodViews.add_semester, name='add_semester'),
+    path('edit_semester/<int:semester_id>/', HodViews.edit_semester, name='edit_semester'),
+    path('delete_semester/<int:semester_id>/', HodViews.delete_semester, name='delete_semester'),
+    
+    # Timetable URLs
+    path('manage_timetable/', HodViews.manage_timetable, name='manage_timetable'),
+    path('add_timetable/', HodViews.add_timetable, name='add_timetable'),
+    path('edit_timetable/<int:timetable_id>/', HodViews.edit_timetable, name='edit_timetable'),
+    path('delete_timetable/<int:timetable_id>/', HodViews.delete_timetable, name='delete_timetable'),
+    path('get_semesters/', HodViews.get_semesters, name='get_semesters'),
+    path('get_subjects/', HodViews.get_subjects, name='get_subjects'),
+    path('get_subjects/', HodViews.get_subjects, name='get_subjects'),
     path('add_staff/',HodViews.add_staff,name="add_staff"),
     path('add_staff_save',HodViews.add_staff_save,name="add_staff_save"),
     path('check_staff_username/', views.check_staff_username, name='check_staff_username'),

@@ -54,8 +54,11 @@ Manage Subjects
                   <tr>
                     <th>ID</th>
                     <th>Subject Name</th>
+                    <th>Faculty</th>
                     <th>Course</th>
+                    <th>Semester</th>
                     <th>Assigned Staff</th>
+                    <th>Created At</th>
                     <th class="text-center">Actions</th>
                   </tr>
                 </thead>
@@ -65,27 +68,43 @@ Manage Subjects
                     <td class="align-middle font-weight-bold text-primary">#{{ subject.id }}</td>
                     <td class="align-middle font-weight-bold">{{ subject.subject_name }}</td>
                     <td class="align-middle">
+  {% if subject.faculty %}
+    {{ subject.faculty.name }}
+    <!-- Debug info (visible only when needed) -->
+    <small class="text-muted d-none">Faculty ID: {{ subject.faculty.id }})
+    </small>
+  {% else %}
+    <span class="text-danger">No faculty assigned</span>
+  {% endif %}
+</td>
+                    <td class="align-middle">
                       {{ subject.course_id.course_name }}
                     </td>
+                    <td class="align-middle">{{subject.semester.name}}</td>
                     <td class="align-middle">
                       {% if subject.staff_id %}
                       <div class="d-flex align-items-center">
                         <div class="avatar-circle-sm mr-2">
-                          {% if subject.staff_id.admin.profile_pic %}
-                          <img src="{{ subject.staff_id.admin.profile_pic.url }}" class="img-circle" alt="Profile"
-                            onerror="this.onerror=null;this.src='{% static 'dist/img/user2-160x160.jpg' %}'">
+                          {% if subject.staff_id.staff.profile_pic %}
+                          <img src="{{ subject.staff_id.staff.profile_pic }}" alt="Profile">
                           {% else %}
-                          <img src="{% static 'dist/img/user2-160x160.jpg' %}" class="img-circle" alt="Default Profile">
+                          <img src="{% static 'dist/img/user2-160x160.jpg' %}" alt="Default">
                           {% endif %}
                         </div>
                         <div>
                           {{ subject.staff_id.first_name }} {{ subject.staff_id.last_name }}
+                          <div class="text-muted small">{{ subject.staff_id.staff.phone_number }}</div>
                           <div class="text-muted small">{{ subject.staff_id.email }}</div>
                         </div>
                       </div>
                       {% else %}
                       <span class="text-danger">Not assigned</span>
                       {% endif %}
+                    </td>
+                    <td class="align-middle" style="color:#2a5298 !important; font-weight: 10px;">
+                      <small class="text-muted font-weight-bold" >
+                        <i class="far fa-calendar-alt mr-1"></i> {{ subject.created_at|date:"Y-m-d" }}
+                      </small>
                     </td>
                     <td class="align-middle text-center">
                       <div class="btn-group" role="group">
