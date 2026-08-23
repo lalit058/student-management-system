@@ -54,7 +54,7 @@ DATABASES = {
     'default': dj_database_url.parse(
         os.environ.get(
             'DATABASE_URL',
-            'postgresql://student_management_db_django_render_user:fxUChmVWj2YXEclQBeRzwAW5W8UEpUo8@dpg-d2fknjbe5dus73asppi0-a.oregon-postgres.render.com/student_management_db_django_render',
+            'postgresql://student_management_db_02ub_user:TN0l61FE7m7W0RfvrsHvxvjoq1seiYW7@dpg-da5j3j0u01pc73fegd9g-a.oregon-postgres.render.com/student_management_db_02ub',
         )
     )
 }
