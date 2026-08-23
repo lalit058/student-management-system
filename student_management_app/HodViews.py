@@ -475,6 +475,7 @@ def add_course_save(request):
     else:
         course_name = request.POST.get("course").strip()
         session_id = request.POST.get("session")  # Get the selected session ID
+        faculty_id = request.POST.get("faculty")
         
         try:
             # Check if course already exists (case-insensitive)
@@ -484,10 +485,12 @@ def add_course_save(request):
             
             # Get the session instance
             session = SessionYearModel.objects.get(id=session_id)
+            faculty = Faculty.objects.get(id=faculty_id)
             
             # Create new course with session
             course_model = Courses(
                 course_name=course_name,
+                session=session,
                 session=session  # Add the session relationship
             )
             course_model.save()
@@ -497,6 +500,9 @@ def add_course_save(request):
             
         except SessionYearModel.DoesNotExist:
             messages.error(request, "Invalid Session Selected")
+            return HttpResponseRedirect(reverse("add_course"))
+        except Faculty.DoesNotExist:
+            messages.error(request, "Invalid Faculty Selected")
             return HttpResponseRedirect(reverse("add_course"))
         except Exception as e:
             print(f"Error: {e}")
