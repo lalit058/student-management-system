@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 """
 
 import os
+import dj_database_url
 #import dj_database_url
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -64,16 +65,12 @@ MIDDLEWARE = [
 STATICFILES_STORAGE = 'whitenoise.django.GzipManifestStaticFilesStorage'
 
 DATABASES = {
-    'default': {
-        # 'ENGINE': 'django.db.backends.sqlite3',
-        # 'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-        'ENGINE':'django.db.backends.mysql',
-        'NAME':'student_management_db',
-        'USER':'student',
-        'PASSWORD':'Lalit@98',
-        'HOST':'localhost',
-        'PORT':'3306'
-    }
+    'default': dj_database_url.parse(
+        os.environ.get(
+            'DATABASE_URL',
+            'postgresql://student_management_db_django_render_user:fxUChmVWj2YXEclQBeRzwAW5W8UEpUo8@dpg-d2fknjbe5dus73asppi0-a.oregon-postgres.render.com/student_management_db_django_render',
+        )
+    )
 }
 
 ROOT_URLCONF = 'student_management_system.urls'
