@@ -1296,21 +1296,16 @@ def edit_staff_save(request):
         staff_model.gender = gender  # Update gender field
 
         if profile_pic:
-            # 1. Delete old file if it exists
+            # 1. Safely delete the old file if it exists and has a valid path
             if staff_model.profile_pic:
-                old_file_path = staff_model.profile_pic.path
-                if os.path.exists(old_file_path):
-                    os.remove(old_file_path)
+                try:
+                    if hasattr(staff_model.profile_pic, 'path') and os.path.exists(staff_model.profile_pic.path):
+                        os.remove(staff_model.profile_pic.path)
+                except Exception:
+                    pass
 
-            # 2. Generate a clean filename (replace spaces and special chars)
-            import re
-            clean_filename = re.sub(r'[^\w.-]', '_', profile_pic.name)
-            
-            # 3. Define the upload path explicitly
-            upload_path = f"staff_profile_pics/{clean_filename}"
-
-            # 4. Save the file (Django handles MEDIA_ROOT automatically)
-            staff_model.profile_pic.save(upload_path, profile_pic)
+            # 2. Assign the new file directly so Django handles the storage path safely
+            staff_model.profile_pic = profile_pic
 
         staff_model.save()
         messages.success(request, "Successfully Updated Staff Details")
