@@ -491,7 +491,7 @@ def add_course_save(request):
             course_model = Courses(
                 course_name=course_name,
                 session=session,
-                session=session  # Add the session relationship
+                faculty=faculty
             )
             course_model.save()
             
