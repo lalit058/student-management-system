@@ -463,8 +463,10 @@ def staff_profile_view(request, staff_id):
 
 def add_course(request):
     sessions = SessionYearModel.objects.all()
+    faculties = Faculty.objects.all()  # Fetch all faculties
     return render(request, 'hod_template/add_course_template.html', {
         'sessions': sessions,
+        'faculties': faculties,  # Pass faculties to template
     })
 
 def add_course_save(request):
